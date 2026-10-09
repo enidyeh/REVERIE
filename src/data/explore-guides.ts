@@ -1,5 +1,8 @@
 // EXPLORE 的四处栏目引导与计划卡片的轻度映射。
 // 规则只用现有演示数据做挑选与排序：不新增任何文案，也不调用网络或 AI。
+import { exploreCopy, preferenceOptionLabels } from '../i18n/explore'
+import { pick } from '../i18n/localize'
+import type { Locale, Localized } from '../i18n/messages'
 import { contentTopics } from './content'
 import {
   experiences,
@@ -10,7 +13,7 @@ import {
 import { creatorProducts, type CreatorProduct } from './market'
 import { youthSpaces, type YouthSpace } from './spaces'
 
-type Option<Value extends string> = { value: Value; label: string }
+type Option<Value extends string> = { value: Value; label: Localized }
 
 // 偏好的选项文案：筛选控件与「已按你的选择调整」提示共用同一份，避免两处不一致。
 export const preferenceOptions: {
@@ -19,35 +22,35 @@ export const preferenceOptions: {
   company: Option<DiscoverPreferences['company']>[]
 } = {
   interest: [
-    { value: 'all', label: '都可以' },
-    { value: 'city', label: '城市漫游' },
-    { value: 'make', label: '动手创作' },
-    { value: 'listen', label: '聆听时刻' },
+    { value: 'all', label: preferenceOptionLabels.interest.all },
+    { value: 'city', label: preferenceOptionLabels.interest.city },
+    { value: 'make', label: preferenceOptionLabels.interest.make },
+    { value: 'listen', label: preferenceOptionLabels.interest.listen },
   ],
   timeLimit: [
-    { value: 'any', label: '暂不限定' },
-    { value: '60', label: '1 小时内' },
-    { value: '90', label: '90 分钟内' },
-    { value: '120', label: '2 小时内' },
+    { value: 'any', label: preferenceOptionLabels.timeLimit.any },
+    { value: '60', label: preferenceOptionLabels.timeLimit['60'] },
+    { value: '90', label: preferenceOptionLabels.timeLimit['90'] },
+    { value: '120', label: preferenceOptionLabels.timeLimit['120'] },
   ],
   company: [
-    { value: 'any', label: '都可以' },
-    { value: 'solo', label: '适合独自出发' },
-    { value: 'group', label: '想认识同行者' },
+    { value: 'any', label: preferenceOptionLabels.company.any },
+    { value: 'solo', label: preferenceOptionLabels.company.solo },
+    { value: 'group', label: preferenceOptionLabels.company.group },
   ],
 }
 
 const lookUp = <Value extends string>(list: Option<Value>[], value: Value) => list.find((option) => option.value === value)?.label
 
 // 只列出「已经选过」的条件，用于提示下面的内容为什么是这样。
-export function activePreferenceLabels(preferences: DiscoverPreferences): string[] {
+export function activePreferenceLabels(preferences: DiscoverPreferences, locale: Locale): string[] {
   const labels: string[] = []
   const interest = lookUp(preferenceOptions.interest, preferences.interest)
   const time = lookUp(preferenceOptions.timeLimit, preferences.timeLimit)
   const company = lookUp(preferenceOptions.company, preferences.company)
-  if (preferences.interest !== 'all' && interest) labels.push(interest)
-  if (preferences.timeLimit !== 'any' && time) labels.push(time)
-  if (preferences.company !== 'any' && company) labels.push(company)
+  if (preferences.interest !== 'all' && interest) labels.push(pick(locale, interest))
+  if (preferences.timeLimit !== 'any' && time) labels.push(pick(locale, time))
+  if (preferences.company !== 'any' && company) labels.push(pick(locale, company))
   return labels
 }
 
@@ -62,19 +65,21 @@ export function matchingExperiences(preferences: DiscoverPreferences): Experienc
 }
 
 // 线上专题：把与当前兴趣更贴近的那一期提到最前，其余保持项目方给的顺序。
-// 八条专题本身仍然是项目方的原文，这里只调整先后。
+// 用专题 id 匹配，不用标题文字：翻译后排序不会失效。
 const topicAffinity: Record<DiscoverPreferences['interest'], string[]> = {
   all: [],
-  city: ['上海 5 个奇怪空间'],
-  make: ['Doll Culture'],
-  listen: ['5 个梦境创作者'],
+  city: ['strange-spaces'],
+  make: ['doll-culture'],
+  listen: ['dream-makers'],
 }
 
-export function guideTopics(preferences: DiscoverPreferences): string[] {
+export function guideTopics(preferences: DiscoverPreferences, locale: Locale): { id: string; label: string }[] {
   const items = contentTopics.items.slice(0, 8)
   const affinity = topicAffinity[preferences.interest]
-  if (affinity.length === 0) return items
-  return [...items.filter((topic) => affinity.includes(topic)), ...items.filter((topic) => !affinity.includes(topic))]
+  const ordered = affinity.length === 0
+    ? items
+    : [...items.filter((topic) => affinity.includes(topic.id)), ...items.filter((topic) => !affinity.includes(topic.id))]
+  return ordered.map((topic) => ({ id: topic.id, label: pick(locale, topic.label) }))
 }
 
 // 商店：按兴趣方向对应的分类挑三件（单次预算筛选已按项目方要求去掉）。
@@ -111,9 +116,9 @@ export function guideSpaces(preferences: DiscoverPreferences): YouthSpace[] {
 export type PlanCard = { id: string; source: string; title: string; text: string; next: string; fallback: boolean }
 
 // 计划卡片：不再用固定的预设回答，改为按当前筛选结果从现有数据里挑一条，
-// 标题 / 说明 / 一行信息都取自该条目本身的字段。
+// 标题 / 说明 / 一行信息都取自该条目本身的字段，并按当前语言解析成单语文案。
 // `usedIds` 用于让同一组里的多条计划尽量指向不同条目（拿不到新条目时才会重复）。
-export function planFor(preferences: DiscoverPreferences, promptId: EditorPromptId, usedIds: string[] = []): PlanCard {
+export function planFor(preferences: DiscoverPreferences, promptId: EditorPromptId, locale: Locale, usedIds: string[] = []): PlanCard {
   const matches = matchingExperiences(preferences)
   const freshMatches = matches.filter((experience) => !usedIds.includes(experience.id))
   const freshAny = experiences.filter((experience) => !usedIds.includes(experience.id))
@@ -121,21 +126,37 @@ export function planFor(preferences: DiscoverPreferences, promptId: EditorPrompt
   if (promptId === 'go-solo') {
     const spaces = guideSpaces({ ...preferences, company: 'solo' })
     const space = spaces.find((item) => !usedIds.includes(item.id)) ?? spaces[0]
-    return { id: space.id, source: 'SPACE / 青年空间', title: space.name, text: space.description, next: `${space.district} · ${space.category} · ${space.price}`, fallback: false }
+    return {
+      id: space.id,
+      source: pick(locale, exploreCopy.planSourceSpace),
+      title: pick(locale, space.name),
+      text: pick(locale, space.description),
+      next: `${pick(locale, space.district)} · ${pick(locale, space.category)} · ${pick(locale, space.price)}`,
+      fallback: false,
+    }
   }
 
   // 精选体验没有完全匹配时退回其它精选，并在界面上说明原因。
   const fallback = freshMatches.length === 0
   const pool = fallback && promptId !== 'meet-people' ? [experiences[0]] : freshMatches
+  const source = pick(locale, exploreCopy.planSourceExperience)
+  const line = (experience: Experience) => `${pick(locale, experience.location)} · ${pick(locale, experience.duration)} · ${pick(locale, experience.budget)}`
 
   if (promptId === 'meet-people') {
-    const pick = freshMatches.find((experience) => experience.socialFit === 'group')
+    const pickOne = freshMatches.find((experience) => experience.socialFit === 'group')
       ?? freshMatches[0]
       ?? freshAny[0]
       ?? experiences[0]
-    return { id: pick.id, source: 'EXPLORE / 精选体验', title: pick.title, text: pick.reason, next: `${pick.location} · ${pick.duration} · ${pick.budget}`, fallback: freshMatches.length === 0 }
+    return {
+      id: pickOne.id,
+      source,
+      title: pick(locale, pickOne.title),
+      text: pick(locale, pickOne.reason),
+      next: line(pickOne),
+      fallback: freshMatches.length === 0,
+    }
   }
 
-  const pick = [...pool].sort((a, b) => a.durationMinutes - b.durationMinutes)[0] ?? experiences[0]
-  return { id: pick.id, source: 'EXPLORE / 精选体验', title: pick.title, text: pick.reason, next: `${pick.location} · ${pick.duration} · ${pick.budget}`, fallback }
+  const chosen = [...pool].sort((a, b) => a.durationMinutes - b.durationMinutes)[0] ?? experiences[0]
+  return { id: chosen.id, source, title: pick(locale, chosen.title), text: pick(locale, chosen.reason), next: line(chosen), fallback }
 }

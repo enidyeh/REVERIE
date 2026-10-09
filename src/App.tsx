@@ -26,20 +26,20 @@ import { MoreMenu, type MoreTarget } from './components/MoreMenu'
 import { SocialMarks } from './components/SocialMarks'
 import { useLocale } from './i18n/use-locale'
 import { shell } from './i18n/shell'
-import type { Experience } from './data/discover'
+import { homeCopy } from './i18n/home'
+import type { ExperienceDraft } from './data/discover'
 import './unseen.css'
 
 type Section = 'discover' | 'home' | 'identity' | 'collaborate' | 'about'
 type HomeSection = 'explore' | 'content' | 'events' | 'shop' | 'space'
-type IdentityDraft = Pick<Experience, 'id' | 'title' | 'location' | 'category'>
 type NavItem = { id: Section; label: string; icon: typeof Compass }
 
-const homeSections: { id: HomeSection; label: string; icon: typeof CalendarDays }[] = [
-  { id: 'explore', label: 'EXPLORE', icon: Compass },
-  { id: 'content', label: 'CONTENT', icon: Newspaper },
-  { id: 'events', label: 'EVENTS', icon: CalendarDays },
-  { id: 'shop', label: 'SHOP', icon: ShoppingBag },
-  { id: 'space', label: 'SPACE', icon: MapPin },
+const homeSections: { id: HomeSection; icon: typeof CalendarDays }[] = [
+  { id: 'explore', icon: Compass },
+  { id: 'content', icon: Newspaper },
+  { id: 'events', icon: CalendarDays },
+  { id: 'shop', icon: ShoppingBag },
+  { id: 'space', icon: MapPin },
 ]
 
 // 左侧三个入口：进入 REVERIE 世界。
@@ -60,7 +60,7 @@ function App() {
   const { t } = useLocale()
   const [section, setSection] = useState<Section>('discover')
   const [homeSection, setHomeSection] = useState<HomeSection>('explore')
-  const [identityDraft, setIdentityDraft] = useState<IdentityDraft | null>(null)
+  const [identityDraft, setIdentityDraft] = useState<ExperienceDraft | null>(null)
   // 从 DISCOVER 的「查看票夹」进来时，IDENTITY 打开「我的票据」；关闭后消费掉这个请求。
   const [identityTickets, setIdentityTickets] = useState(false)
   // 手机端顶部 MORE 菜单：COLLABORATE 与 ABOUT 的子项都在这里。
@@ -129,13 +129,16 @@ function App() {
 
         {section === 'home' && (
           <section className="home-view" aria-labelledby="home-title">
-            <div className="section-meta"><span>THE CITY, IN REAL LIFE</span><span>上海 / SHANGHAI</span></div>
-            <div className="home-heading">
-              <div><h1 id="home-title">在现场，<br /><span>遇见更多。</span></h1></div>
-              <p className="heading-aside">城市不是背景，<br />它是正在发生的事。</p>
+            <div className="section-meta">
+              {t(homeCopy.sectionMeta) && <span>{t(homeCopy.sectionMeta)}</span>}
+              <span>{t(homeCopy.city)}</span>
             </div>
-            <div className="home-tabs" role="tablist" aria-label="城市栏目">
-              {homeSections.map(({ id, label, icon: Icon }) => (
+            <div className="home-heading">
+              <div><h1 id="home-title">{t(homeCopy.titleLines)[0]}<br /><span>{t(homeCopy.titleLines)[1]}</span></h1></div>
+              <p className="heading-aside">{t(homeCopy.asideLines)[0]}<br />{t(homeCopy.asideLines)[1]}</p>
+            </div>
+            <div className="home-tabs" role="tablist" aria-label={t(homeCopy.tabsLabel)}>
+              {homeSections.map(({ id, icon: Icon }) => (
                 <button
                   className={`home-tab ${homeSection === id ? 'is-active' : ''}`}
                   id={`tab-${id}`}
@@ -145,7 +148,7 @@ function App() {
                   aria-selected={homeSection === id}
                   onClick={() => setHomeSection(id)}
                 >
-                  <Icon size={15} aria-hidden="true" /><span>{label}</span>
+                  <Icon size={15} aria-hidden="true" /><span>{t(homeCopy.tabs[id])}</span>
                 </button>
               ))}
             </div>

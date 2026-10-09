@@ -91,7 +91,7 @@ export const themeBrands: ThemeBrand[] = [
   })),
 ]
 
-export type ThemeArticle = { id: string; title: string; meta: string }
+export type ThemeArticle = { id: string; title: Localized; meta: string }
 export type ThemeFeaturedItem = { id: string; label: Localized; image: string; articles: ThemeArticle[] }
 
 // 每个形式下列出的条目是**示范例子**：直接取自 HOME › CONTENT 的「线上专题」九期方向，
@@ -100,7 +100,7 @@ const featuredTopics = (prefix: string, indexes: number[]): ThemeArticle[] =>
   indexes.map((index, position) => ({
     id: `${prefix}-topic-0${position + 1}`,
     meta: `TOPIC 0${position + 1}`,
-    title: contentTopics.items[index],
+    title: contentTopics.items[index].label,
   }))
 
 // 四张配图为占位素材（沿用本站已有的 Unsplash 演示图），待项目方提供对应专题的正式图片。

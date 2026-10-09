@@ -4,7 +4,7 @@ import { activePreferenceLabels, guideShopPicks, guideSpaces, guideTopics, match
 import { creatorProducts, shopGroups, type ShopGroupId } from './market'
 import { activityOrder, buildTickets, ticketActivity, ticketNumber } from '../tickets'
 
-const defaultLabels = () => activePreferenceLabels(defaultDiscoverPreferences)
+const defaultLabels = () => activePreferenceLabels(defaultDiscoverPreferences, 'zh')
 
 describe('筛选条件读取', () => {
   it('null 与损坏数据都回退到默认值', () => {
@@ -27,8 +27,8 @@ describe('筛选条件读取', () => {
 describe('筛选联动', () => {
   it('默认状态下没有偏好标签，选中后逐项出现', () => {
     expect(defaultLabels()).toEqual([])
-    expect(activePreferenceLabels({ interest: 'city', timeLimit: 'any', company: 'any' })).toHaveLength(1)
-    expect(activePreferenceLabels({ interest: 'city', timeLimit: '90', company: 'solo' })).toHaveLength(3)
+    expect(activePreferenceLabels({ interest: 'city', timeLimit: 'any', company: 'any' }, 'zh')).toHaveLength(1)
+    expect(activePreferenceLabels({ interest: 'city', timeLimit: '90', company: 'solo' }, 'en')).toHaveLength(3)
   })
 
   it('时长筛选只保留不超过上限的体验', () => {
@@ -46,7 +46,7 @@ describe('筛选联动', () => {
   it('三条计划条目互不重复，且都带来源与回退说明字段', () => {
     const used: string[] = []
     const plans = editorPrompts.map((prompt) => {
-      const plan = planFor(defaultDiscoverPreferences, prompt.id, used)
+      const plan = planFor(defaultDiscoverPreferences, prompt.id, 'zh', used)
       used.push(plan.id)
       return plan
     })
@@ -75,7 +75,14 @@ describe('筛选联动', () => {
   })
 
   it('专题列表始终包含全部条目，不丢项', () => {
-    expect(guideTopics(defaultDiscoverPreferences)).toHaveLength(8)
+    const base = guideTopics(defaultDiscoverPreferences, 'zh')
+    expect(base).toHaveLength(8)
+    expect(new Set(base.map((topic) => topic.id)).size).toBe(8)
+    // 专题排序按 id 匹配：翻译后不能失效。
+    expect(guideTopics({ interest: 'city', timeLimit: 'any', company: 'any' }, 'zh')[0].id).toBe('strange-spaces')
+    expect(guideTopics({ interest: 'city', timeLimit: 'any', company: 'any' }, 'en')[0].id).toBe('strange-spaces')
+    expect(guideTopics({ interest: 'make', timeLimit: 'any', company: 'any' }, 'zh')[0].id).toBe('doll-culture')
+    expect(guideTopics({ interest: 'listen', timeLimit: 'any', company: 'any' }, 'zh')[0].id).toBe('dream-makers')
   })
 })
 

@@ -1,6 +1,5 @@
 /* EXPLORE 的栏目信息引导（CONTENT / SHOP / SPACE）：只做预览与入口。 */
 .explore-guide { margin-top: 46px; }
-.explore-guide-en { margin: 8px 0 0; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); letter-spacing: .06em; }
 .explore-section-actions { display: flex; align-items: center; gap: 14px; }
 .explore-guide-action { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border: 1px solid var(--explore-rule); background: transparent; color: var(--explore-text); font: var(--text-xs)/var(--text-xs-leading) var(--mono); letter-spacing: .06em; white-space: nowrap; cursor: pointer; }
 .explore-guide-action:hover { border-color: rgba(168, 155, 255, .6); color: var(--accent); }

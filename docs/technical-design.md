@@ -63,10 +63,11 @@ src/
 - 语言状态：`Locale = 'zh' | 'en'`，保存在 `localStorage` 的 `unseen:locale:v1`，由 `src/i18n/locale.tsx` 的 `LocaleProvider` 写入并同步 `<html lang>`；组件通过 `src/i18n/use-locale.ts` 的 `useLocale()` 取 `{ locale, setLocale, t }`。
 - 取值方式：双语文案写成 `{ zh, en }`（`Localized<T>`，值可以是字符串，也可以是带参数的函数，例如 `{ zh: (n) => `${n} 张票`, en: (n) => `${n} ${plural(n, 'ticket', 'tickets')}` }`）。视图用 `t(value)` 取当前语言；**不使用「中文段落下跟英文段落」的写法**。中文版页面内的眉题与子标签一律中文（纯英文眉题写成 `zh: null`，渲染时跳过），只有品牌标识与主导航保留英文；英文版不出现中文。
 - 数据层：数据模块（`src/data/*.ts`）的显示字段就地改写成 `{ zh, en }`，用 `useLocalized(数据模块)`（内部调 `localizeDeep`）在渲染前按当前语言解析一次，得到单语数据树；id、序号、展位号、价格、外链等标识保持普通字符串。视图里的字面量统一収到 `src/i18n/*.ts` 文案模块，不在 JSX 里写双语字面。
-- 文件划分：`messages.ts`（类型与常量）、`context.ts`（Context）、`locale.tsx`（只导出 Provider）、`use-locale.ts`（只导出 hook）、`use-localized.ts`（解析 hook）、`localize.ts`（`pick` / `localizeDeep`）、`format.ts`（单复数等格式化）、`meta.ts`（页面 meta 按语言重写）、`shell.ts` / `discover.ts` / `tickets.ts`（文案）——拆分是为了满足 `react-refresh/only-export-components`。
+- 文件划分：`messages.ts`（类型与常量）、`context.ts`（Context）、`locale.tsx`（只导出 Provider）、`use-locale.ts`（只导出 hook）、`use-localized.ts`（解析 hook）、`localize.ts`（`pick` / `localizeDeep`）、`format.ts`（单复数等格式化）、`meta.ts`（页面 meta 按语言重写）；文案：`shell.ts`（外壳）、`home.ts`（HOME 英雄区与五个子栏目标签）、`discover.ts`（DISCOVER 与购票弹层）、`explore.ts`（EXPLORE 与偏好选项）、`content.ts`（CONTENT）、`market.ts`（SHOP）、`space.ts`（SPACE）、`tickets.ts`（票据图片 canvas）——拆分是为了满足 `react-refresh/only-export-components`。
 - 入口控件：`src/components/LanguagePicker.tsx`（样式 `language-picker.css`）放在页头 `.header-selects` 内、国家城市选择器右侧，交互与 `LocationPicker` 一致（弹层 + Esc / 背板关闭 + 焦点交还）。窄屏（≤760px）时两个选择器只显示图标，保留 44px 触控尺寸与 `aria-label`。
 - 静态 meta：`index.html` 保留中文（爬虫读到的是中文），浏览器内切换语言时由 `LocaleProvider` 调 `meta.ts` 的 `applySiteMeta` 重写 `description` / `og:description` / `twitter:description` / `og:locale`；标题与 `og:title` 用品牌标语，两版一致。
-- 进度与术语：见 `docs/i18n-glossary.md`（含规则、术语表与逐页状态）。已完成：外壳 + DISCOVER（含购票弹层与票据图片 canvas）。待做：HOME 英雄区、EXPLORE、CONTENT、EVENTS、SHOP、SPACE、IDENTITY、COLLABORATE、ABOUT。
+- 进度与术语：见 `docs/i18n-glossary.md`（含规则、术语表与逐页状态）。已完成：外壳 + DISCOVER（含购票弹层与票据图片 canvas）+ HOME（英雄区与五个子栏目标签、EXPLORE、CONTENT、SHOP、SPACE，含商品/空间/专题数据）。待做：EVENTS、IDENTITY、COLLABORATE、ABOUT。
+- 依赖中文文字的排序已清理：EXPLORE 的专题排序（`topicAffinity`）改用专题 id 匹配（`contentTopics.items` 带 `id`），不再因翻译失效。
 - 自动化防线：`src/i18n/i18n.test.ts` 遍历数据与文案模块，断言每个 `{ zh, en }` 每侧要么有内容要么明确为 `null`（不得是空字符串、不得两侧都空），且**英文侧不出现任何中文**；`localizeDeep` 有单独用例。
 
 ## 质量要求

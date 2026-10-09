@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpRight, Check, Minus, Plus, ShoppingBag, X } from 'lucide-react'
 import { creatorProducts, shopEdit, shopGroups, type CreatorProduct, type ShopGroupId } from './data/market'
+import { marketCopy as copy } from './i18n/market'
+import type { Localized } from './i18n/messages'
+import { useLocale } from './i18n/use-locale'
 import './market.css'
 
 type CartItem = { productId: string; quantity: number }
@@ -9,8 +12,8 @@ type ProductCategoryFilter = 'all' | ShopGroupId
 type PriceOrder = 'featured' | 'ascending' | 'descending'
 
 // 分类不是传统电商分类（服装 / 家居 / 配饰），而是项目方给的四个来源（独立创作者产品 / 艺术家周边 / 海外小众商品 / 自有原创产品）。
-const productCategories: { id: ProductCategoryFilter; label: string }[] = [
-  { id: 'all', label: '全部' },
+const productCategories: { id: ProductCategoryFilter; label: Localized }[] = [
+  { id: 'all', label: copy.categoryAll },
   ...shopGroups,
 ]
 
@@ -48,6 +51,8 @@ function ProductDetails({
   onClose: () => void
   onAdd: (productId: string) => void
 }) {
+  const { t } = useLocale()
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
@@ -59,19 +64,19 @@ function ProductDetails({
   return (
     <div className="market-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="market-product-dialog" role="dialog" aria-modal="true" aria-labelledby="market-product-title">
-        <button className="market-dialog-close" type="button" onClick={onClose} aria-label="关闭商品详情"><X size={19} /></button>
-        <div className="market-dialog-image"><img src={product.image} alt={product.imageAlt} /></div>
+        <button className="market-dialog-close" type="button" onClick={onClose} aria-label={t(copy.dialogClose)}><X size={19} /></button>
+        <div className="market-dialog-image"><img src={product.image} alt={t(product.imageAlt)} /></div>
         <div className="market-dialog-copy">
-          <p className="market-eyebrow">{product.category} <span>/</span> 演示商品</p>
-          <p className="market-creator">{product.creator}</p>
-          <h2 id="market-product-title">{product.title}</h2>
-          <p className="market-product-subtitle">{product.subtitle}</p>
-          <p className="market-product-description">{product.description}</p>
-          <div className="market-creator-story"><span>CREATOR'S NOTE / 创作者手记</span><p>{product.creatorStory}</p><small>{product.objectDetails}</small></div>
-          <p className="market-origin">{product.origin}</p>
-          <div className="market-detail-buyline"><strong>{product.priceLabel}</strong><span>虚构演示商品</span></div>
-          <button className="market-primary-action" type="button" onClick={() => onAdd(product.id)}><ShoppingBag size={16} />加入购物袋</button>
-          <p className="market-demo-note">不涉及真实库存、发货或支付</p>
+          <p className="market-eyebrow">{t(product.category)} <span>/</span> {t(copy.dialogDemoTag)}</p>
+          <p className="market-creator">{t(product.creator)}</p>
+          <h2 id="market-product-title">{t(product.title)}</h2>
+          <p className="market-product-subtitle">{t(product.subtitle)}</p>
+          <p className="market-product-description">{t(product.description)}</p>
+          <div className="market-creator-story"><span>{t(copy.creatorNote)}</span><p>{t(product.creatorStory)}</p><small>{t(product.objectDetails)}</small></div>
+          <p className="market-origin">{t(product.origin)}</p>
+          <div className="market-detail-buyline"><strong>{t(product.priceLabel)}</strong><span>{t(copy.dialogDemoProduct)}</span></div>
+          <button className="market-primary-action" type="button" onClick={() => onAdd(product.id)}><ShoppingBag size={16} />{t(copy.addToBag)}</button>
+          <p className="market-demo-note">{t(copy.dialogDemoNote)}</p>
         </div>
       </section>
     </div>
@@ -91,6 +96,8 @@ function ShoppingBagPanel({
   onChangeQuantity: (productId: string, change: number) => void
   onCheckout: () => void
 }) {
+  const { t } = useLocale()
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
@@ -109,16 +116,16 @@ function ShoppingBagPanel({
     <div className="market-overlay market-cart-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="market-cart-panel" role="dialog" aria-modal="true" aria-labelledby="market-cart-title">
         <header className="market-cart-header">
-          <div><p className="market-eyebrow">CREATOR MARKET / YOUR BAG</p><h2 id="market-cart-title">购物袋 <span>{cartProducts.reduce((sum, item) => sum + item.quantity, 0).toString().padStart(2, '0')}</span></h2></div>
-          <button className="market-dialog-close" type="button" onClick={onClose} aria-label="关闭购物袋"><X size={19} /></button>
+          <div><p className="market-eyebrow">{t(copy.cartEyebrow)}</p><h2 id="market-cart-title">{t(copy.bagLabel)} <span>{cartProducts.reduce((sum, item) => sum + item.quantity, 0).toString().padStart(2, '0')}</span></h2></div>
+          <button className="market-dialog-close" type="button" onClick={onClose} aria-label={t(copy.cartClose)}><X size={19} /></button>
         </header>
         {orderComplete ? (
           <div className="market-order-success" role="status">
             <span className="market-success-mark"><Check size={22} /></span>
-            <p className="market-eyebrow">DEMO / NOT A REAL ORDER</p>
-            <h3>这次购买，只在演示里发生。</h3>
-            <p>购物袋已清空。没有创建真实订单、扣款或安排发货。</p>
-            <button className="market-primary-action" type="button" onClick={onClose}>继续逛集市 <ArrowUpRight size={16} /></button>
+            <p className="market-eyebrow">{t(copy.orderEyebrow)}</p>
+            <h3>{t(copy.orderHeading)}</h3>
+            <p>{t(copy.orderBody)}</p>
+            <button className="market-primary-action" type="button" onClick={onClose}>{t(copy.keepBrowsing)} <ArrowUpRight size={16} /></button>
           </div>
         ) : cartProducts.length ? (
           <>
@@ -127,13 +134,13 @@ function ShoppingBagPanel({
                 <article className="market-cart-item" key={product.id}>
                   <div className="market-cart-item-image"><img src={product.image} alt="" /></div>
                   <div className="market-cart-item-copy">
-                    <p className="market-eyebrow">{product.creator}</p>
-                    <h3>{product.title}</h3>
-                    <div className="market-cart-item-bottom"><strong>{product.priceLabel}</strong>
-                      <div className="market-quantity-control" aria-label={`${product.title}数量`}>
-                        <button type="button" onClick={() => onChangeQuantity(product.id, -1)} aria-label={`减少${product.title}数量`}><Minus size={14} /></button>
+                    <p className="market-eyebrow">{t(product.creator)}</p>
+                    <h3>{t(product.title)}</h3>
+                    <div className="market-cart-item-bottom"><strong>{t(product.priceLabel)}</strong>
+                      <div className="market-quantity-control" aria-label={t(copy.quantityAria)(t(product.title))}>
+                        <button type="button" onClick={() => onChangeQuantity(product.id, -1)} aria-label={t(copy.decreaseAria)(t(product.title))}><Minus size={14} /></button>
                         <span aria-live="polite">{quantity}</span>
-                        <button type="button" onClick={() => onChangeQuantity(product.id, 1)} aria-label={`增加${product.title}数量`}><Plus size={14} /></button>
+                        <button type="button" onClick={() => onChangeQuantity(product.id, 1)} aria-label={t(copy.increaseAria)(t(product.title))}><Plus size={14} /></button>
                       </div>
                     </div>
                   </div>
@@ -141,26 +148,27 @@ function ShoppingBagPanel({
               ))}
             </div>
             <div className="market-cart-summary">
-              <div><span>演示小计</span><strong>¥ {subtotal.toFixed(2)}</strong></div>
-              <p>价格仅用于交互演示，不会产生实际扣款。</p>
-              <button className="market-primary-action" type="button" onClick={onCheckout}>模拟下单 <ArrowUpRight size={16} /></button>
+              <div><span>{t(copy.subtotalLabel)}</span><strong>¥ {subtotal.toFixed(2)}</strong></div>
+              <p>{t(copy.subtotalNote)}</p>
+              <button className="market-primary-action" type="button" onClick={onCheckout}>{t(copy.placeOrder)} <ArrowUpRight size={16} /></button>
             </div>
           </>
         ) : (
           <div className="market-cart-empty">
             <ShoppingBag size={28} strokeWidth={1.3} />
-            <h3>袋子还是空的。</h3>
-            <p>逛到喜欢的创作者作品，可以先放进这里。</p>
-            <button className="market-secondary-action" type="button" onClick={onClose}>回到集市</button>
+            <h3>{t(copy.emptyHeading)}</h3>
+            <p>{t(copy.emptyBody)}</p>
+            <button className="market-secondary-action" type="button" onClick={onClose}>{t(copy.backToMarket)}</button>
           </div>
         )}
-        <span className="market-cart-demo-label">LOCAL DEMO ONLY / NO PAYMENT</span>
+        <span className="market-cart-demo-label">{t(copy.cartDemoLabel)}</span>
       </section>
     </div>
   )
 }
 
 function MarketView() {
+  const { t } = useLocale()
   const [cart, setCart] = useState<CartItem[]>(loadCart)
   const [selectedProduct, setSelectedProduct] = useState<CreatorProduct | null>(null)
   const [cartOpen, setCartOpen] = useState(false)
@@ -198,7 +206,7 @@ function MarketView() {
         : item)
     })
     const product = creatorProducts.find((item) => item.id === productId)
-    setAnnouncement(product ? `${product.title}已加入购物袋` : '商品已加入购物袋')
+    setAnnouncement(product ? t(copy.addedNotice)(t(product.title)) : t(copy.addedGeneric))
   }
 
   function changeQuantity(productId: string, change: number) {
@@ -222,63 +230,72 @@ function MarketView() {
   return (
     <div className="market-page">
       <header className="market-heading">
-        <div><p className="market-eyebrow">OBJECTS WITH A POINT OF VIEW / 01—03</p><h2>小小的东西，<br /><span>有很大的来处。</span></h2><p>从创作者手里，遇见另一种日常。</p></div>
-        <button className="market-bag-trigger" type="button" onClick={openCart} aria-label={`打开购物袋，${itemCount} 件商品`}>
-          <ShoppingBag size={17} /><span>购物袋</span><b>{itemCount.toString().padStart(2, '0')}</b>
+        <div>
+          {t(copy.headingEyebrow) && <p className="market-eyebrow">{t(copy.headingEyebrow)}</p>}
+          <h2>{t(copy.headingLines)[0]}<br /><span>{t(copy.headingLines)[1]}</span></h2>
+          <p>{t(copy.headingLead)}</p>
+        </div>
+        <button className="market-bag-trigger" type="button" onClick={openCart} aria-label={t(copy.bagAria)(itemCount)}>
+          <ShoppingBag size={17} /><span>{t(copy.bagLabel)}</span><b>{itemCount.toString().padStart(2, '0')}</b>
         </button>
       </header>
       <div className="market-browse-controls">
-        <div className="market-category-filters" role="group" aria-label="按商品类别筛选">
+        <div className="market-category-filters" role="group" aria-label={t(copy.categoryGroupLabel)}>
           {productCategories.map((category) => {
             const count = category.id === 'all' ? creatorProducts.length : creatorProducts.filter((product) => product.group === category.id).length
-            return <button className={categoryFilter === category.id ? 'is-active' : ''} type="button" key={category.id} aria-pressed={categoryFilter === category.id} onClick={() => setCategoryFilter(category.id)}>{category.label}<span>{count.toString().padStart(2, '0')}</span></button>
+            return <button className={categoryFilter === category.id ? 'is-active' : ''} type="button" key={category.id} aria-pressed={categoryFilter === category.id} onClick={() => setCategoryFilter(category.id)}>{t(category.label)}<span>{count.toString().padStart(2, '0')}</span></button>
           })}
         </div>
-        <button className="market-sort-toggle" type="button" aria-label={priceOrder === 'featured' ? '精选排序，点击按价格由低到高' : priceOrder === 'ascending' ? '价格由低到高，点击按高到低' : '价格由高到低，点击恢复精选排序'} onClick={() => setPriceOrder((current) => current === 'featured' ? 'ascending' : current === 'ascending' ? 'descending' : 'featured')}>
-          {priceOrder === 'featured' ? '精选排序' : priceOrder === 'ascending' ? '价格 ↑' : '价格 ↓'}
+        <button
+          className="market-sort-toggle"
+          type="button"
+          aria-label={priceOrder === 'featured' ? t(copy.sortAriaFeatured) : priceOrder === 'ascending' ? t(copy.sortAriaAscending) : t(copy.sortAriaDescending)}
+          onClick={() => setPriceOrder((current) => current === 'featured' ? 'ascending' : current === 'ascending' ? 'descending' : 'featured')}
+        >
+          {priceOrder === 'featured' ? t(copy.sortFeatured) : priceOrder === 'ascending' ? t(copy.sortAscending) : t(copy.sortDescending)}
         </button>
       </div>
 
       {featuredProduct && (
         <article className="market-feature">
-          <button className="market-feature-image" type="button" onClick={() => setSelectedProduct(featuredProduct)} aria-label={`查看商品详情：${featuredProduct.title}`}>
-            <img src={featuredProduct.image} alt={featuredProduct.imageAlt} />
-            <span>FEATURED / 商品精选</span>
-            <b>{featuredProduct.creator}</b>
+          <button className="market-feature-image" type="button" onClick={() => setSelectedProduct(featuredProduct)} aria-label={t(copy.viewProductAria)(t(featuredProduct.title))}>
+            <img src={featuredProduct.image} alt={t(featuredProduct.imageAlt)} />
+            <span>{t(copy.featuredBadge)}</span>
+            <b>{t(featuredProduct.creator)}</b>
           </button>
           <div className="market-feature-copy">
-            <p className="market-eyebrow">{featuredProduct.category}</p>
-            <h3>{featuredProduct.title}</h3>
-            <p className="market-product-subtitle">{featuredProduct.subtitle}</p>
-            <p className="market-product-description">{featuredProduct.description}</p>
-            <div className="market-creator-story"><span>{featuredProduct.creator} / 创作者手记</span><p>{featuredProduct.creatorStory}</p></div>
-            <div className="market-feature-bottom"><strong>{featuredProduct.priceLabel}</strong>
-              <div><button className="market-secondary-action" type="button" onClick={() => setSelectedProduct(featuredProduct)}>看作品</button><button className="market-add-action" type="button" onClick={() => addToCart(featuredProduct.id)} aria-label={`加入购物袋：${featuredProduct.title}`}><ShoppingBag size={16} /><span>加入购物袋</span></button></div>
+            <p className="market-eyebrow">{t(featuredProduct.category)}</p>
+            <h3>{t(featuredProduct.title)}</h3>
+            <p className="market-product-subtitle">{t(featuredProduct.subtitle)}</p>
+            <p className="market-product-description">{t(featuredProduct.description)}</p>
+            <div className="market-creator-story"><span>{t(featuredProduct.creator)} / {t(copy.creatorNote)}</span><p>{t(featuredProduct.creatorStory)}</p></div>
+            <div className="market-feature-bottom"><strong>{t(featuredProduct.priceLabel)}</strong>
+              <div><button className="market-secondary-action" type="button" onClick={() => setSelectedProduct(featuredProduct)}>{t(copy.viewPiece)}</button><button className="market-add-action" type="button" onClick={() => addToCart(featuredProduct.id)} aria-label={t(copy.addToBagAria)(t(featuredProduct.title))}><ShoppingBag size={16} /><span>{t(copy.addToBag)}</span></button></div>
             </div>
           </div>
         </article>
       )}
 
-      <section className="market-card-grid" aria-label="创作者精选商品">
+      <section className="market-card-grid" aria-label={t(copy.gridLabel)}>
         {gridProducts.map((product) => (
           <article className="market-card" key={product.id}>
-            <button className="market-card-image" type="button" onClick={() => setSelectedProduct(product)} aria-label={`查看商品详情：${product.title}`}>
-              <img src={product.image} alt={product.imageAlt} />
+            <button className="market-card-image" type="button" onClick={() => setSelectedProduct(product)} aria-label={t(copy.viewProductAria)(t(product.title))}>
+              <img src={product.image} alt={t(product.imageAlt)} />
             </button>
             <div className="market-card-body">
-              <p className="market-card-meta">{product.category} / {product.creator}</p>
-              <h3>{product.title}</h3>
-              <p className="market-card-subtitle">{product.subtitle}</p>
-              <p className="market-card-price">{product.priceLabel}</p>
-              <button className="market-card-action" type="button" onClick={() => addToCart(product.id)} aria-label={`加入购物袋：${product.title}`}>
-                <ShoppingBag size={14} aria-hidden="true" />加入购物车
+              <p className="market-card-meta">{t(product.category)} / {t(product.creator)}</p>
+              <h3>{t(product.title)}</h3>
+              <p className="market-card-subtitle">{t(product.subtitle)}</p>
+              <p className="market-card-price">{t(product.priceLabel)}</p>
+              <button className="market-card-action" type="button" onClick={() => addToCart(product.id)} aria-label={t(copy.addToBagAria)(t(product.title))}>
+                <ShoppingBag size={14} aria-hidden="true" />{t(copy.addToCart)}
               </button>
             </div>
           </article>
         ))}
       </section>
-      <p className="market-note">{shopEdit.note}</p>
-      <p className="market-footer-note">商品与创作者均为虚构演示内容 · 不代表真实在售</p>
+      <p className="market-note">{t(shopEdit.note)}</p>
+      <p className="market-footer-note">{t(copy.footerNote)}</p>
       <p className="market-announcement" aria-live="polite">{announcement}</p>
 
       {selectedProduct && <ProductDetails product={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={addToCart} />}

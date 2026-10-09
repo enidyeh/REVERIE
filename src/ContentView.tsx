@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowUpRight, Compass } from 'lucide-react'
 import { contentMeta, contentNote, contentTopics } from './data/content'
 import { themeFeatured } from './data/theme'
+import { contentCopy as copy } from './i18n/content'
 import { useLocale } from './i18n/use-locale'
 import './content.css'
 
@@ -12,23 +13,22 @@ export function ContentView() {
 
   return (
     <section className="content-view" aria-labelledby="content-title">
-      <div className="section-meta"><span>CONTENT / EDITORIAL</span><span>UNSEEN · 暗盒</span></div>
+      <div className="section-meta"><span>{t(copy.sectionMetaLeft)}</span><span>{t(copy.sectionMetaRight)}</span></div>
 
       <div className="content-heading">
         <div>
-          <p className="content-eyebrow"><span className="content-dot" />{contentMeta.kicker} &gt;</p>
-          <h2 id="content-title">{contentMeta.title}</h2>
-          <p className="content-title-en">{contentMeta.titleEn}</p>
+          <p className="content-eyebrow"><span className="content-dot" />{t(contentMeta.kicker)} &gt;</p>
+          <h2 id="content-title">{t(contentMeta.title)}</h2>
         </div>
       </div>
 
       <section className="content-featured-section" aria-labelledby="content-featured-heading">
         <div className="content-section-heading">
           <div>
-            <p className="content-eyebrow">01 / {t(themeFeatured.title)}</p>
+            <p className="content-eyebrow">{t(copy.featuredEyebrow)}</p>
             <h3 id="content-featured-heading">{t(themeFeatured.title)}</h3>
           </div>
-          <span>{themeFeatured.items.length.toString().padStart(2, '0')} FORMS</span>
+          <span>{t(copy.formsCount)(themeFeatured.items.length)}</span>
         </div>
         <p className="content-featured-line">{t(themeFeatured.line)}</p>
         <div className="content-featured-grid">
@@ -41,16 +41,16 @@ export function ContentView() {
                   {item.articles.map((article) => (
                     <li key={article.id}>
                       <span>{article.meta}</span>
-                      <p>{article.title}</p>
+                      <p>{t(article.title)}</p>
                     </li>
                   ))}
                 </ul>
                 <button
                   className="content-more"
                   type="button"
-                  onClick={() => setNotice(`演示：文章详情页尚未接入，「${t(item.label)}」的更多文章会在这里展开`)}
+                  onClick={() => setNotice(t(copy.articleNotice)(t(item.label)))}
                 >
-                  {t(themeFeatured.moreLabel)}「{t(item.label)}」
+                  {t(copy.moreLabel)(t(item.label))}
                   <ArrowUpRight size={13} aria-hidden="true" />
                 </button>
               </div>
@@ -65,25 +65,25 @@ export function ContentView() {
       <section className="content-topics-section" aria-labelledby="content-topics-heading">
         <div className="content-section-heading">
           <div>
-            <p className="content-eyebrow">02 / {contentTopics.eyebrow}</p>
-            <h3 id="content-topics-heading">{contentTopics.label}</h3>
+            <p className="content-eyebrow">{t(copy.topicsEyebrow)}</p>
+            <h3 id="content-topics-heading">{t(contentTopics.label)}</h3>
           </div>
-          <span>{contentTopics.items.length.toString().padStart(2, '0')} TOPICS</span>
+          <span>{t(copy.topicsCount)(contentTopics.items.length)}</span>
         </div>
         <ol className="content-topics">
           {contentTopics.items.map((topic, index) => (
-            <li className="content-topic" key={topic}>
+            <li className="content-topic" key={topic.id}>
               <span className="content-topic-index">{String(index + 1).padStart(2, '0')}</span>
-              <span className="content-topic-name">{topic}</span>
+              <span className="content-topic-name">{t(topic.label)}</span>
             </li>
           ))}
         </ol>
-        <p className="content-note-inline">{contentTopics.note}</p>
+        <p className="content-note-inline">{t(contentTopics.note)}</p>
       </section>
 
-      <p className="content-note">{contentNote}</p>
+      <p className="content-note">{t(contentNote)}</p>
       <div className="content-footer-mark">
-        <span>UNSEEN｜暗盒 · CONTENT</span>
+        <span>{t(copy.footerMark)}</span>
         <span><Compass size={13} aria-hidden="true" />REVERIE / SHANGHAI</span>
       </div>
     </section>

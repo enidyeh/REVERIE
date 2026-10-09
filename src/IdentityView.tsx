@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ArrowUpRight, BadgeCheck, BookOpen, Check, MapPin, Plus, Ticket, Trash2, UsersRound, X } from 'lucide-react'
-import { experiences, type Experience } from './data/discover'
+import { experiences, type ExperienceDraft } from './data/discover'
 import { cityEvents } from './data/events'
 import { demoArchiveEntries, identityBadges, identityProfile, type ArchiveEntry } from './data/identity'
 import { youthSpaces } from './data/spaces'
 import { loadTickets, persistTickets, type TicketRecord } from './tickets'
 import { TicketVault } from './components/TicketVault'
+import { pick } from './i18n/localize'
+import { useLocale } from './i18n/use-locale'
 import './identity.css'
 
 const storageKey = 'unseen:identity:v1'
@@ -13,7 +15,7 @@ const discoverStorageKey = 'unseen:discover:v1'
 const eventsStorageKey = 'unseen:events:v1'
 const spacesStorageKey = 'unseen:space:v1'
 const maximumEntries = 200
-type IdentityDraft = Pick<Experience, 'id' | 'title' | 'location' | 'category'>
+type IdentityDraft = ExperienceDraft
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -119,6 +121,7 @@ function IdentityView({
   onTicketsRequestedConsumed?: () => void
 }) {
   const [userEntries, setUserEntries] = useState<ArchiveEntry[]>(loadUserEntries)
+  const { locale } = useLocale()
   const [joinedTeams] = useState(loadJoinedTeams)
   const [plannedExperiences] = useState(loadPlannedExperiences)
   const [spaceVisitIntents] = useState(loadSpaceVisitIntents)
@@ -297,7 +300,7 @@ function IdentityView({
             {plannedExperiences.length ? plannedExperiences.map((experience, index) => (
               <article className="identity-next-item" key={experience.id}>
                 <span className="identity-next-index">{(index + 1).toString().padStart(2, '0')}</span>
-                <div><strong>{experience.title}</strong><p>{experience.location} · {experience.date} · 计划中</p></div>
+                <div><strong>{pick(locale, experience.title)}</strong><p>{pick(locale, experience.location)} · {pick(locale, experience.date)} · 计划中</p></div>
                 <button type="button" onClick={onFindExplore} aria-label="返回 EXPLORE 查看计划"><ArrowUpRight size={14} /></button>
               </article>
             )) : <p className="identity-next-empty">还没有加入计划的体验。</p>}
@@ -319,7 +322,7 @@ function IdentityView({
             {spaceVisitIntents.length ? spaceVisitIntents.map(({ space, slot }) => (
               <article className="identity-next-item" key={space.id}>
                 <span className="identity-next-index"><MapPin size={14} /></span>
-                <div><strong>{space.name}</strong><p>{slot.label} · {space.district} · 意向中</p></div>
+                <div><strong>{pick(locale, space.name)}</strong><p>{pick(locale, slot.label)} · {pick(locale, space.district)} · 意向中</p></div>
                 <button type="button" onClick={onFindSpace} aria-label="返回 Space 查看预约意向"><ArrowUpRight size={14} /></button>
               </article>
             )) : <p className="identity-next-empty">还没有空间到访意向。</p>}
