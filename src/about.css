@@ -17,8 +17,7 @@
 .about-section-heading > span { color: var(--about-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); white-space: nowrap; }
 
 .about-definition { margin-top: 52px; }
-.about-definition-en { max-width: 700px; margin: 22px 0 0; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
-.about-definition-zh { max-width: 700px; margin: 10px 0 0; color: #b9c6ce; font-size: var(--text-md); line-height: 1.9; }
+.about-definition-line { max-width: 700px; margin: 22px 0 0; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
 .about-definition-body { max-width: 640px; margin: 16px 0 0; color: #b9c6ce; font-size: var(--text-md); line-height: 1.9; }
 
 /* 品牌卡片紧接上面的「我们关注年轻人正在喜欢…」一句，不再另起区块标题。 */
@@ -27,7 +26,6 @@
 .about-brand { min-height: 190px; padding: 22px 20px; background: var(--ink); }
 .about-brand-verb { margin: 0; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
 .about-brand h3 { margin: 16px 0 6px; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
-.about-brand-zh { margin: 0; color: #b79bff; font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
 .about-brand-line { margin: 14px 0 0; color: #b9c6ce; font-size: var(--text-sm); line-height: 1.85; }
 .about-world-note { max-width: 680px; margin: 18px 0 0; color: var(--about-muted); font-size: var(--text-sm); line-height: 1.85; }
 
@@ -47,8 +45,7 @@
 .about-contact { margin-top: 52px; }
 .about-contact-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
 .about-contact-card { padding: 20px 18px; border: 1px solid var(--about-rule); }
-.about-contact-en { margin: 0; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
-.about-contact-card h3 { margin: 13px 0 8px; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
+.about-contact-card h3 { margin: 0 0 8px; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
 .about-contact-line { margin: 0; color: #b9c6ce; font-size: var(--text-sm); line-height: 1.8; }
 .about-contact-card ul { margin: 16px 0 0; padding: 0; list-style: none; }
 .about-contact-card li { display: flex; align-items: center; gap: 9px; min-height: 38px; border-top: 1px solid var(--about-rule); }

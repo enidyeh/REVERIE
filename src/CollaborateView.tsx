@@ -9,11 +9,14 @@ import {
   partnerAudiences,
   partnerFormFields,
 } from './data/collaborate'
+import { collaborateCopy as copy } from './i18n/collaborate'
+import { useLocale } from './i18n/use-locale'
 import './collaborate.css'
 
 type Track = 'partner' | 'open-call'
 
 function CollaborateView() {
+  const { t } = useLocale()
   const [activeRole, setActiveRole] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState<string | null>(null)
   const openCallRef = useRef<HTMLElement>(null)
@@ -42,23 +45,23 @@ function CollaborateView() {
 
   return (
     <div className="collab-page">
-      <div className="section-meta"><span>COLLABORATE / 一起创造</span><span>PARTNER / OPEN CALLS</span></div>
+      <div className="section-meta"><span>{t(copy.sectionMetaLeft)}</span><span>{t(copy.sectionMetaRight)}</span></div>
 
       <header className="collab-heading">
         <div>
-          <p className="collab-eyebrow"><span className="collab-live-dot" /> CREATE WITH US</p>
-          <h1>把你的世界，<br /><span>带进这里。</span></h1>
+          {t(copy.coverEyebrow) && <p className="collab-eyebrow"><span className="collab-live-dot" /> {t(copy.coverEyebrow)}</p>}
+          <h1>{t(copy.coverTitleLines)[0]}<br /><span>{t(copy.coverTitleLines)[1]}</span></h1>
         </div>
-        <p className="collab-heading-aside">左边是进入 REVERIE 世界，<br />这里是和 REVERIE 一起做事。</p>
+        <p className="collab-heading-aside">{t(copy.headingAsideLines)[0]}<br />{t(copy.headingAsideLines)[1]}</p>
       </header>
 
-      <section className="collab-entries" aria-label="合作与报名入口">
+      <section className="collab-entries" aria-label={t(copy.entriesLabel)}>
         <button className="collab-entry" type="button" onClick={() => jumpTo(partnerRef)}>
           <span className="collab-entry-index"><Handshake size={17} aria-hidden="true" /></span>
           <span className="collab-entry-body">
             <b>01</b>
-            <strong>PARTNER WITH US</strong>
-            <em>合作伙伴 · 品牌 / 场地 / 机构</em>
+            <strong>{t(copy.entryPartnerTitle)}</strong>
+            <em>{t(copy.entryPartnerNote)}</em>
           </span>
           <ArrowUpRight size={16} aria-hidden="true" />
         </button>
@@ -66,8 +69,8 @@ function CollaborateView() {
           <span className="collab-entry-index"><Megaphone size={17} aria-hidden="true" /></span>
           <span className="collab-entry-body">
             <b>02</b>
-            <strong>OPEN CALLS</strong>
-            <em>报名参与 · 摊主 / 艺术家 / 演出者</em>
+            <strong>{t(copy.entryCallsTitle)}</strong>
+            <em>{t(copy.entryCallsNote)}</em>
           </span>
           <ArrowUpRight size={16} aria-hidden="true" />
         </button>
@@ -76,72 +79,71 @@ function CollaborateView() {
       <section className="collab-partner" ref={partnerRef} aria-labelledby="collab-partner-heading">
         <div className="collab-section-heading">
           <div>
-            <p className="collab-eyebrow">01 / PARTNER WITH US</p>
-            <h2 id="collab-partner-heading">Bring your world into ours.</h2>
+            <p className="collab-eyebrow">{t(copy.partnerEyebrow)}</p>
+            <h2 id="collab-partner-heading">{t(copy.partnerHeading)}</h2>
           </div>
-          <span>合作伙伴</span>
+          <span>{t(copy.partnerBadge)}</span>
         </div>
-        <p className="collab-partner-lead">把你的品牌、作品、空间或想法带进 REVERIE。</p>
+        <p className="collab-partner-lead">{t(copy.partnerLead)}</p>
 
-        <h3 className="collab-subheading">我们和谁合作</h3>
+        <h3 className="collab-subheading">{t(copy.audienceHeading)}</h3>
         <ul className="collab-audiences">
           {partnerAudiences.map((audience) => (
-            <li key={audience.id}><span>{audience.zh}</span><b>{audience.en}</b></li>
+            <li key={audience.id}><span>{t(audience.label)}</span></li>
           ))}
         </ul>
 
-        <h3 className="collab-subheading">合作方式</h3>
+        <h3 className="collab-subheading">{t(copy.formatsHeading)}</h3>
         <ul className="collab-formats">
-          {collaborationFormats.map((format) => <li key={format}>{format}</li>)}
+          {t(collaborationFormats).map((format) => <li key={format}>{format}</li>)}
         </ul>
 
         <div className="collab-actions">
-          <button className="collab-primary-action" type="button" onClick={() => jumpTo(partnerFormRef)}>合作详情 <ArrowUpRight size={15} aria-hidden="true" /></button>
-          <span className="collab-action-note">VIEW PARTNERSHIP DECK｜合作手册尚未提供，本次演示中不提供下载。</span>
+          <button className="collab-primary-action" type="button" onClick={() => jumpTo(partnerFormRef)}>{t(copy.partnerDetailAction)} <ArrowUpRight size={15} aria-hidden="true" /></button>
+          <span className="collab-action-note">{t(copy.partnerDeckNote)}</span>
         </div>
 
         <div className="collab-form-block" ref={partnerFormRef}>
-          <p className="collab-eyebrow">START A COLLABORATION</p>
+          <p className="collab-eyebrow">{t(copy.partnerFormEyebrow)}</p>
           <form className="collab-form" onSubmit={(event) => handleSubmit(event, 'partner')}>
             {partnerFormFields.map((field) => (
               <label key={field.id} htmlFor={`partner-${field.id}`}>
-                {field.label}
-                <input id={`partner-${field.id}`} name={field.id} placeholder={field.placeholder} required={field.required} maxLength={160} />
+                {t(field.label)}
+                <input id={`partner-${field.id}`} name={field.id} placeholder={t(field.placeholder)} required={field.required} maxLength={160} />
               </label>
             ))}
             <label htmlFor="partner-format">
-              合作方向
-              <select id="partner-format" name="format" defaultValue={collaborationFormats[0]}>
-                {collaborationFormats.map((format) => <option key={format} value={format}>{format}</option>)}
+              {t(copy.partnerFormatLabel)}
+              <select id="partner-format" name="format" defaultValue={t(collaborationFormats)[0]}>
+                {t(collaborationFormats).map((format) => <option key={format} value={format}>{format}</option>)}
               </select>
             </label>
-            <button className="collab-primary-action" type="submit">提交合作意向</button>
-            <p className="collab-form-note">{openCallNote}</p>
+            <button className="collab-primary-action" type="submit">{t(copy.partnerSubmit)}</button>
+            <p className="collab-form-note">{t(openCallNote)}</p>
           </form>
-          {submitted === 'partner' && <p className="collab-submit-result" aria-live="polite"><Check size={15} aria-hidden="true" />演示提交已完成：真实提交需要接入服务，当前版本不会发送任何内容。</p>}
+          {submitted === 'partner' && <p className="collab-submit-result" aria-live="polite"><Check size={15} aria-hidden="true" />{t(copy.partnerSubmitted)}</p>}
         </div>
       </section>
 
       <section className="collab-open-calls" ref={openCallRef} aria-labelledby="collab-open-calls-heading">
         <div className="collab-section-heading">
           <div>
-            <p className="collab-eyebrow">02 / OPEN CALLS</p>
-            <h2 id="collab-open-calls-heading">现在正在招募。</h2>
+            <p className="collab-eyebrow">{t(copy.callsEyebrow)}</p>
+            <h2 id="collab-open-calls-heading">{t(copy.callsHeading)}</h2>
           </div>
-          <span>{openCalls.length.toString().padStart(2, '0')} OPEN</span>
+          <span>{t(copy.callsOpenCount)(openCalls.length)}</span>
         </div>
 
         <article className="collab-call-card">
           <div className="collab-call-topline">
-            <span>{call.status}</span>
+            <span>{t(call.status)}</span>
             <b>{call.window}</b>
           </div>
-          <h3>{call.title}</h3>
-          <p className="collab-call-zh">{call.titleZh}</p>
-          <p className="collab-call-line">{call.line}</p>
+          <h3>{t(call.title)}</h3>
+          <p className="collab-call-line">{t(call.line)}</p>
         </article>
 
-        <h3 className="collab-subheading">选择你的身份</h3>
+        <h3 className="collab-subheading">{t(copy.rolesHeading)}</h3>
         <div className="collab-roles">
           {openCallRoles.map((entry) => (
             <button
@@ -151,39 +153,38 @@ function CollaborateView() {
               aria-pressed={activeRole === entry.id}
               onClick={() => pickRole(entry.id)}
             >
-              <span className="collab-role-zh">{entry.zh}</span>
-              <span className="collab-role-en">{entry.en}</span>
-              <span className="collab-role-line">{entry.line}</span>
+              <span className="collab-role-label">{t(entry.label)}</span>
+              <span className="collab-role-line">{t(entry.line)}</span>
             </button>
           ))}
         </div>
 
         {role && (
           <div className="collab-form-block" ref={openCallFormRef} aria-live="polite">
-            <p className="collab-eyebrow">APPLY / {role.en}</p>
-            <h3 className="collab-form-title">报名成为{role.zh}。</h3>
-            <p className="collab-form-hint">{call.title}｜{call.titleZh} · {call.window}</p>
+            <p className="collab-eyebrow">{t(copy.applyEyebrow)(t(role.label))}</p>
+            <h3 className="collab-form-title">{t(copy.applyTitle)(t(role.label))}</h3>
+            <p className="collab-form-hint">{t(copy.callHint)(t(call.title), call.window)}</p>
             <form className="collab-form" onSubmit={(event) => handleSubmit(event, 'open-call')}>
               {openCallFields.map((field) => (
                 <label key={field.id} htmlFor={`call-${field.id}`}>
-                  {field.label}
-                  <input id={`call-${field.id}`} name={field.id} placeholder={field.placeholder} required={field.required} maxLength={200} />
+                  {t(field.label)}
+                  <input id={`call-${field.id}`} name={field.id} placeholder={t(field.placeholder)} required={field.required} maxLength={200} />
                 </label>
               ))}
-              <button className="collab-primary-action" type="submit">提交报名</button>
-              <p className="collab-form-note">{openCallNote}</p>
+              <button className="collab-primary-action" type="submit">{t(copy.callsSubmit)}</button>
+              <p className="collab-form-note">{t(openCallNote)}</p>
             </form>
-            {submitted === 'open-call' && <p className="collab-submit-result" aria-live="polite"><Check size={15} aria-hidden="true" />演示提交已完成：没有产生真实报名，也没有保存你填写的内容。</p>}
+            {submitted === 'open-call' && <p className="collab-submit-result" aria-live="polite"><Check size={15} aria-hidden="true" />{t(copy.callsSubmitted)}</p>}
           </div>
         )}
 
         {!role && (
-          <p className="collab-roles-hint"><FlaskConical size={14} aria-hidden="true" />选一个身份即可看到对应的报名表单，两步完成。</p>
+          <p className="collab-roles-hint"><FlaskConical size={14} aria-hidden="true" />{t(copy.rolesHint)}</p>
         )}
-        <p className="collab-disclosure">本页所有内容与表单均为本地演示：不会提交、不会保存，也不会产生真实的报名、合作或支付。</p>
+        <p className="collab-disclosure">{t(copy.disclosure)}</p>
       </section>
 
-      <div className="collab-footer-mark"><span>CREATE WITH US.</span><span>COLLABORATE / 2026</span></div>
+      <div className="collab-footer-mark"><span>{t(copy.footerLines)[0]}</span><span>{t(copy.footerLines)[1]}</span></div>
     </div>
   )
 }
