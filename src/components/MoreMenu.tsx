@@ -6,11 +6,11 @@ type MoreTarget = { id: string; section: 'collaborate' | 'about'; anchor?: strin
 type MoreItem = { label: string; note?: string; target: MoreTarget }
 
 // 手机端顶部 MORE 菜单：把 COLLABORATE 与 ABOUT 的子项集中在这里。
-const moreGroups: { id: string; en: string; zh: string; items: MoreItem[] }[] = [
+// 分组原先带英文小字（Partners / Open Calls、Story / Contact），已按项目方要求删除。
+const moreGroups: { id: string; en: string; items: MoreItem[] }[] = [
   {
     id: 'collaborate',
     en: 'COLLABORATE',
-    zh: 'Partners / Open Calls',
     items: [
       { label: '品牌招募', note: 'PARTNER WITH US', target: { id: 'brand', section: 'collaborate', anchor: '.collab-partner' } },
       { label: 'OPEN CALL', note: '报名参与', target: { id: 'open-call', section: 'collaborate', anchor: '.collab-open-calls' } },
@@ -19,7 +19,6 @@ const moreGroups: { id: string; en: string; zh: string; items: MoreItem[] }[] = 
   {
     id: 'about',
     en: 'ABOUT',
-    zh: 'Story / Contact',
     items: [
       { label: 'About REVERIE', note: '一句话定义', target: { id: 'about-reverie', section: 'about', anchor: '.about-definition' } },
       { label: 'Past Projects', note: '做过的事', target: { id: 'past-projects', section: 'about', anchor: '.about-story' } },
@@ -70,7 +69,6 @@ export function MoreMenu({ onClose, onSelect }: MoreMenuProps) {
           <section className="more-group" key={group.id} aria-labelledby={`more-${group.id}-heading`}>
             <div className="more-group-head">
               <h2 id={`more-${group.id}-heading`}>{group.en}</h2>
-              <span>{group.zh}</span>
             </div>
             <ul className="more-list">
               {group.items.map((item) => (

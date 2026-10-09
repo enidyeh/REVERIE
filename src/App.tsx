@@ -29,7 +29,7 @@ import './unseen.css'
 type Section = 'discover' | 'home' | 'identity' | 'collaborate' | 'about'
 type HomeSection = 'explore' | 'content' | 'events' | 'shop' | 'space'
 type IdentityDraft = Pick<Experience, 'id' | 'title' | 'location' | 'category'>
-type NavItem = { id: Section; label: string; sublabel?: string; icon: typeof Compass }
+type NavItem = { id: Section; label: string; icon: typeof Compass }
 
 const homeSections: { id: HomeSection; label: string; icon: typeof CalendarDays }[] = [
   { id: 'explore', label: 'EXPLORE', icon: Compass },
@@ -47,9 +47,10 @@ const primaryNavigation: NavItem[] = [
 ]
 
 // 右侧两个入口：和 REVERIE 发生关系。桌面端在主航栏，手机端收进顶部 MORE 菜单。
+// 原先的英文小字（Partners / Open Calls、Story / Contact）已按项目方要求删除。
 const secondaryNavigation: NavItem[] = [
-  { id: 'collaborate', label: 'COLLABORATE', sublabel: 'Partners / Open Calls', icon: Handshake },
-  { id: 'about', label: 'ABOUT', sublabel: 'Story / Contact', icon: BookOpen },
+  { id: 'collaborate', label: 'COLLABORATE', icon: Handshake },
+  { id: 'about', label: 'ABOUT', icon: BookOpen },
 ]
 
 function App() {
@@ -92,7 +93,7 @@ function App() {
         {[primaryNavigation, secondaryNavigation].map((group, groupIndex) => (
           <Fragment key={groupIndex === 0 ? 'primary' : 'secondary'}>
             <div className={`main-nav-group ${groupIndex === 1 ? 'main-nav-group-end' : ''}`}>
-              {group.map(({ id, label, sublabel, icon: Icon }) => (
+              {group.map(({ id, label, icon: Icon }) => (
                 <button
                   className={`main-nav-item ${section === id ? 'is-active' : ''}`}
                   key={id}
@@ -101,7 +102,7 @@ function App() {
                   onClick={() => setSection(id)}
                 >
                   <Icon size={16} strokeWidth={1.7} aria-hidden="true" />
-                  <span className="main-nav-label">{label}{sublabel && <em>{sublabel}</em>}</span>
+                  <span>{label}</span>
                 </button>
               ))}
             </div>

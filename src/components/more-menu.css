@@ -10,7 +10,6 @@
 .more-group { margin-top: 24px; padding-top: 18px; border-top: 1px dashed rgba(247, 248, 100, .28); }
 .more-group-head { display: flex; align-items: baseline; gap: 10px; }
 .more-group-head h2 { margin: 0; color: var(--text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); letter-spacing: .06em; }
-.more-group-head span { color: var(--muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
 .more-list { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
 .more-list button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid var(--rule); background: #0a1b2e; color: var(--text); font-size: var(--text-sm); text-align: left; cursor: pointer; }
 .more-list button:hover { border-color: rgba(247, 248, 100, .7); color: var(--text); }

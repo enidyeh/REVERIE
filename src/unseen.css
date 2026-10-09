@@ -18,8 +18,6 @@
 .main-nav-group-end { padding-left: 0; }
 .main-nav-item { position: relative; display: flex; align-items: center; gap: 9px; padding: 0 4px; border: 0; background: none; color: rgba(5, 17, 32, .7); font: var(--text-sm)/var(--text-sm-leading) var(--mono); letter-spacing: 0; cursor: pointer; }
 .main-nav-item svg { color: rgba(5, 17, 32, .7); }
-.main-nav-label { display: flex; flex-direction: column; gap: 3px; }
-.main-nav-label em { color: rgba(5, 17, 32, .52); font: var(--text-xs)/var(--text-xs-leading) var(--mono); font-style: normal; }
 .main-nav-item:hover { color: var(--on-acid); }
 .main-nav-item.is-active { color: var(--on-acid); font-weight: 700; }
 .main-nav-item.is-active svg { color: var(--on-acid); }
