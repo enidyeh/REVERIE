@@ -3,6 +3,9 @@ import { ArrowUpRight, CalendarDays, Check, Clock3, MapPin, UsersRound, X } from
 import { cityEvents, eventsFormats, type CityEvent, type EventTeam } from './data/events'
 import { defaultDiscoverPreferences, discoverPreferencesStorageKey, parseDiscoverPreferences, type DiscoverPreferences } from './data/discover'
 import PreferenceControls from './components/PreferenceControls'
+import { eventsCopy as copy } from './i18n/events'
+import { useLocale } from './i18n/use-locale'
+import type { Locale } from './i18n/messages'
 import './events.css'
 
 const storageKey = 'unseen:events:v1'
@@ -37,12 +40,13 @@ function getEventAvailability(event: CityEvent, joinedTeamIds: string[]) {
   return { joinedTeam, openTeams, remainingSeats }
 }
 
-function getPreferenceFitLabels(event: CityEvent, preferences: DiscoverPreferences) {
+function getPreferenceFitLabels(event: CityEvent, preferences: DiscoverPreferences, locale: Locale) {
+  const t = (value: { zh: string; en: string }) => (locale === 'en' ? value.en : value.zh)
   const labels: string[] = []
-  if (preferences.interest !== 'all') labels.push('兴趣匹配')
-  if (preferences.timeLimit !== 'any') labels.push('时长适配')
-  if (preferences.company !== 'any') labels.push(event.socialFit === 'both' ? '独自/同行都可' : '出行方式匹配')
-  return labels.length ? labels : [event.interest === 'city' ? '城市观察' : event.interest === 'make' ? '动手体验' : '聆听现场']
+  if (preferences.interest !== 'all') labels.push(t(copy.fitInterest))
+  if (preferences.timeLimit !== 'any') labels.push(t(copy.fitTime))
+  if (preferences.company !== 'any') labels.push(event.socialFit === 'both' ? t(copy.fitCompanyBoth) : t(copy.fitCompany))
+  return labels.length ? labels : [event.interest === 'city' ? t(copy.fitCity) : event.interest === 'make' ? t(copy.fitMake) : t(copy.fitListen)]
 }
 
 function EventDetails({
@@ -56,6 +60,8 @@ function EventDetails({
   onClose: () => void
   onToggleTeam: (team: EventTeam, eventId: string) => void
 }) {
+  const { t } = useLocale()
+
   useEffect(() => {
     function handleKeyDown(keyEvent: KeyboardEvent) {
       if (keyEvent.key === 'Escape') onClose()
@@ -69,30 +75,33 @@ function EventDetails({
   return (
     <div className="event-dialog-backdrop" onMouseDown={(mouseEvent) => { if (mouseEvent.target === mouseEvent.currentTarget) onClose() }}>
       <section className="event-dialog" role="dialog" aria-modal="true" aria-labelledby="event-dialog-title">
-        <button className="event-dialog-close" type="button" onClick={onClose} aria-label="关闭活动详情"><X size={19} /></button>
-        <div className="event-dialog-image"><img src={event.image} alt={event.imageAlt} /></div>
+        <button className="event-dialog-close" type="button" onClick={onClose} aria-label={t(copy.detailClose)}><X size={19} /></button>
+        <div className="event-dialog-image"><img src={event.image} alt={t(event.imageAlt)} /></div>
         <div className="event-dialog-content">
-          <p className="event-eyebrow">{event.category} <span>/</span> SHANGHAI</p>
-          <h2 id="event-dialog-title">{event.title}</h2>
-          {event.subtitle && <p className="event-subtitle">{event.subtitle}</p>}
-          <p className="event-description">{event.description}</p>
+          <p className="event-eyebrow">{t(event.category)} <span>/</span> SHANGHAI</p>
+          <h2 id="event-dialog-title">{t(event.title)}</h2>
+          {event.subtitle && <p className="event-subtitle">{t(event.subtitle)}</p>}
+          <p className="event-description">{t(event.description)}</p>
           {event.program && (
             <div className="event-program">
-              <p className="event-eyebrow">PROGRAM / 活动内容</p>
+              <p className="event-eyebrow">{t(copy.programLabel)}</p>
               <div className="event-program-list">
-                {event.program.map((item) => <span key={item}>{item}</span>)}
+                {t(event.program).map((item) => <span key={item}>{item}</span>)}
               </div>
             </div>
           )}
           <div className="event-detail-meta">
-            <span><CalendarDays size={15} />{event.date}</span>
-            <span><MapPin size={15} />{event.venue} · {event.district}</span>
-            <span><Clock3 size={15} />{event.duration} · {event.price}</span>
+            <span><CalendarDays size={15} />{t(event.date)}</span>
+            <span><MapPin size={15} />{t(event.venue)} · {t(event.district)}</span>
+            <span><Clock3 size={15} />{t(event.duration)} · {t(event.price)}</span>
           </div>
 
           <div className="event-teams-heading">
-            <div><p className="event-eyebrow">MEET BEFORE YOU GO</p><h3>看看谁也想去。</h3></div>
-            <span>{event.teams.length} 个小队</span>
+            <div>
+              {t(copy.teamsEyebrow) && <p className="event-eyebrow">{t(copy.teamsEyebrow)}</p>}
+              <h3>{t(copy.teamsHeading)}</h3>
+            </div>
+            <span>{t(copy.teamsCount)(event.teams.length)}</span>
           </div>
           <div className="event-team-list">
             {event.teams.map((team) => {
@@ -105,9 +114,9 @@ function EventDetails({
               return (
                 <article className={`event-team ${isJoined ? 'is-joined' : ''}`} key={team.id}>
                   <div className="event-team-copy">
-                    <h4>{team.name}</h4>
-                    <p>{team.note}</p>
-                    <span><UsersRound size={13} />{memberCount}/{team.capacity} 位同行者</span>
+                    <h4>{t(team.name)}</h4>
+                    <p>{t(team.note)}</p>
+                    <span><UsersRound size={13} />{t(copy.membersLine)(memberCount, team.capacity)}</span>
                   </div>
                   <button
                     className={`event-team-action ${isJoined ? 'is-joined' : ''}`}
@@ -115,13 +124,13 @@ function EventDetails({
                     disabled={disabled}
                     onClick={() => onToggleTeam(team, event.id)}
                   >
-                    {isJoined ? <><Check size={15} />退出小队</> : isFull ? '小队已满' : joinedElsewhere ? '已加入其他小队' : <>加入小队 <ArrowUpRight size={15} /></>}
+                    {isJoined ? <><Check size={15} />{t(copy.leaveSquad)}</> : isFull ? t(copy.squadFull) : joinedElsewhere ? t(copy.joinedOtherSquad) : <>{t(copy.joinSquad)} <ArrowUpRight size={15} /></>}
                   </button>
                 </article>
               )
             })}
           </div>
-          <p className="event-demo-note">虚构活动与小队 · 加入仅用于本地演示，不代表真实报名</p>
+          <p className="event-demo-note">{t(copy.demoNote)}</p>
         </div>
       </section>
     </div>
@@ -129,6 +138,7 @@ function EventDetails({
 }
 
 function EventsView() {
+  const { locale, t } = useLocale()
   const [joinedTeamIds, setJoinedTeamIds] = useState<string[]>(loadJoinedTeamIds)
   const [preferences, setPreferences] = useState<DiscoverPreferences>(loadDiscoverPreferences)
   const [selectedEvent, setSelectedEvent] = useState<CityEvent | null>(null)
@@ -172,67 +182,67 @@ function EventsView() {
     <div className="events-page">
       {/* 形式清单来自项目方，均为可选形式；只做说明，不可点击、也不筛选列表。 */}
       <div className="events-formats">
-        <p className="event-eyebrow">{eventsFormats.label}</p>
+        <p className="event-eyebrow">{t(eventsFormats.label)}</p>
         <ul>
-          {eventsFormats.items.map((format) => <li key={format}>{format}</li>)}
+          {t(eventsFormats.items).map((format) => <li key={format}>{format}</li>)}
         </ul>
       </div>
-      <section className="events-preferences" aria-label="活动偏好筛选">
-        <div className="events-preferences-heading"><p className="event-eyebrow">YOUR WEEK / 本地偏好</p>{hasActivePreferences && <button type="button" onClick={() => setPreferences(defaultDiscoverPreferences)}>清除筛选</button>}</div>
+      <section className="events-preferences" aria-label={t(copy.preferencesLabel)}>
+        <div className="events-preferences-heading"><p className="event-eyebrow">{t(copy.preferencesEyebrow)}</p>{hasActivePreferences && <button type="button" onClick={() => setPreferences(defaultDiscoverPreferences)}>{t(copy.clearFilters)}</button>}</div>
         <PreferenceControls preferences={preferences} onChange={(key, value) => setPreferences((current) => ({ ...current, [key]: value }))} />
       </section>
 
       <div className="events-curation-line">
-        <span>EDITOR'S PICKS / 演示活动</span>
-        <span>{matchingEvents.length} / 03 场符合偏好 <i /> {totalTeams} 个同行小队</span>
+        <span>{t(copy.curationEyebrow)}</span>
+        <span>{t(copy.curationCount)(matchingEvents.length, 3)} <i /> {t(copy.squadsTotal)(totalTeams)}</span>
       </div>
 
       {matchingEvents.length ? matchingEvents.map((event, index) => {
         const availability = getEventAvailability(event, joinedTeamIds)
-        const matchLabels = getPreferenceFitLabels(event, preferences)
+        const matchLabels = getPreferenceFitLabels(event, preferences, locale)
         return index === 0 ? (
         <article className="event-feature" key={event.id}>
-          <button className="event-feature-image" type="button" onClick={() => setSelectedEvent(event)} aria-label={`查看活动详情：${event.title}`}>
-            <img src={event.image} alt={event.imageAlt} />
-            <span className="event-image-index">EVENT / 0{index + 1}</span>
-            <span className="event-image-stamp">{event.category.split(' / ')[0]}</span>
+          <button className="event-feature-image" type="button" onClick={() => setSelectedEvent(event)} aria-label={t(copy.viewEventAria)(t(event.title))}>
+            <img src={event.image} alt={t(event.imageAlt)} />
+            <span className="event-image-index">{t(copy.imageIndex)(index + 1)}</span>
+            <span className="event-image-stamp">{t(event.category)}</span>
           </button>
           <div className="event-feature-copy">
-            <p className="event-eyebrow">{event.category}</p>
-            <h3>{event.title}</h3>
-            {event.subtitle && <p className="event-subtitle">{event.subtitle}</p>}
+            <p className="event-eyebrow">{t(event.category)}</p>
+            <h3>{t(event.title)}</h3>
+            {event.subtitle && <p className="event-subtitle">{t(event.subtitle)}</p>}
             <div className="event-fit-tags">{matchLabels.map((label) => <span key={label}>{label}</span>)}</div>
-            <p className="event-feature-description">{event.description}</p>
-            <div className="event-feature-meta"><span><CalendarDays size={14} />{event.date}</span><span><MapPin size={14} />{event.district}</span><span>{event.price}</span></div>
-            <div className="event-card-social-proof"><span><UsersRound size={13} />{availability.openTeams} 个小队可加入 · {availability.remainingSeats} 个空位</span>{availability.joinedTeam && <b><Check size={12} />已加入：{availability.joinedTeam.name}</b>}</div>
-            <button className="event-primary-action" type="button" onClick={() => setSelectedEvent(event)}>查看活动与小队 <ArrowUpRight size={16} /></button>
+            <p className="event-feature-description">{t(event.description)}</p>
+            <div className="event-feature-meta"><span><CalendarDays size={14} />{t(event.date)}</span><span><MapPin size={14} />{t(event.district)}</span><span>{t(event.price)}</span></div>
+            <div className="event-card-social-proof"><span><UsersRound size={13} />{t(copy.seatsLine)(availability.openTeams, availability.remainingSeats)}</span>{availability.joinedTeam && <b><Check size={12} />{t(copy.joinedLabel)(t(availability.joinedTeam.name))}</b>}</div>
+            <button className="event-primary-action" type="button" onClick={() => setSelectedEvent(event)}>{t(copy.viewEventSquads)} <ArrowUpRight size={16} /></button>
           </div>
         </article>
       ) : (
         <article className="event-listing" key={event.id}>
-          <button className="event-listing-image" type="button" onClick={() => setSelectedEvent(event)} aria-label={`查看活动详情：${event.title}`}>
-            <img src={event.image} alt={event.imageAlt} />
+          <button className="event-listing-image" type="button" onClick={() => setSelectedEvent(event)} aria-label={t(copy.viewEventAria)(t(event.title))}>
+            <img src={event.image} alt={t(event.imageAlt)} />
             <span>0{index + 1}</span>
           </button>
           <div className="event-listing-copy">
-            <p className="event-eyebrow">{event.category}</p>
-            <h3>{event.title}</h3>
-            <p>{event.date} <i /> {event.district} <i /> {event.price}</p>
-            <span className="event-listing-social"><UsersRound size={12} />{availability.openTeams} 组可加入 · {availability.remainingSeats} 个空位{availability.joinedTeam && ` · 已加入 ${availability.joinedTeam.name}`}</span>
+            <p className="event-eyebrow">{t(event.category)}</p>
+            <h3>{t(event.title)}</h3>
+            <p>{t(event.date)} <i /> {t(event.district)} <i /> {t(event.price)}</p>
+            <span className="event-listing-social"><UsersRound size={12} />{t(copy.seatsLineCompact)(availability.openTeams, availability.remainingSeats)}{availability.joinedTeam && t(copy.joinedCompact)(t(availability.joinedTeam.name))}</span>
             <div className="event-fit-tags compact">{matchLabels.slice(0, 2).map((label) => <span key={label}>{label}</span>)}</div>
           </div>
-          <button className="event-listing-action" type="button" onClick={() => setSelectedEvent(event)} aria-label={`打开活动详情：${event.title}`}><ArrowUpRight size={18} /></button>
+          <button className="event-listing-action" type="button" onClick={() => setSelectedEvent(event)} aria-label={t(copy.openEventAria)(t(event.title))}><ArrowUpRight size={18} /></button>
         </article>
       )}) : (
         <div className="events-no-match">
           <UsersRound size={19} />
-          <h3>这组偏好下还没有合适活动。</h3>
-          <p>演示活动数量有限，调整偏好或显示全部活动。</p>
-          <button type="button" onClick={() => setPreferences(defaultDiscoverPreferences)}>显示全部活动</button>
+          <h3>{t(copy.emptyHeading)}</h3>
+          <p>{t(copy.emptyBody)}</p>
+          <button type="button" onClick={() => setPreferences(defaultDiscoverPreferences)}>{t(copy.emptyAction)}</button>
         </div>
       )}
 
-      <p className="events-demo-footnote">活动、人名、时间、地点与小队均为虚构演示数据，不代表真实活动。</p>
+      <p className="events-demo-footnote">{t(copy.footnote)}</p>
 
       {selectedEvent && (
         <EventDetails

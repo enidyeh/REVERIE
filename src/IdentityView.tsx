@@ -282,7 +282,7 @@ function IdentityView({
               {joinedTeams.map((team) => (
                 <article className="identity-connection" key={`${team.eventTitle}-${team.teamName}`}>
                   <span className="identity-connection-mark"><UsersRound size={15} /></span>
-                  <div><strong>{team.teamName}</strong><p>{team.eventTitle}</p><span>{team.eventDate} · 演示同行意向</span></div>
+                  <div><strong>{pick(locale, team.teamName)}</strong><p>{pick(locale, team.eventTitle)}</p><span>{pick(locale, team.eventDate)} · 演示同行意向</span></div>
                 </article>
               ))}
             </div>
@@ -311,7 +311,7 @@ function IdentityView({
             {joinedTeams.length ? joinedTeams.map((team) => (
               <article className="identity-next-item" key={`${team.eventTitle}-${team.teamName}`}>
                 <span className="identity-next-index"><UsersRound size={14} /></span>
-                <div><strong>{team.teamName}</strong><p>{team.eventTitle} · {team.eventDate} · 意向中</p></div>
+                <div><strong>{pick(locale, team.teamName)}</strong><p>{pick(locale, team.eventTitle)} · {pick(locale, team.eventDate)} · 意向中</p></div>
                 <button type="button" onClick={onFindEvents} aria-label="返回 Events 查看小队"><ArrowUpRight size={14} /></button>
               </article>
             )) : <p className="identity-next-empty">还没有加入活动小队。</p>}
