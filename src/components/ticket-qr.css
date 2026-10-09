@@ -1,0 +1,9 @@
+/* 临时二维码占位：购票弹层的票面与 IDENTITY 的票面详情共用。 */
+.ticket-qr { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 22px; padding-top: 18px; border-top: 1px dashed rgba(247, 248, 100, .24); }
+.ticket-qr-box { position: relative; flex: none; width: 132px; height: 132px; display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(247, 248, 100, .45); background-color: #081627; background-image: repeating-conic-gradient(from 0deg, rgba(247, 248, 100, .12) 0 25%, transparent 0 50%); background-size: 22px 22px; }
+.ticket-qr-box span { padding: 3px 7px; background: rgba(5, 17, 32, .82); color: var(--accent); font: var(--text-xs)/1 var(--mono); letter-spacing: .12em; }
+.ticket-qr p { flex: 1 1 180px; margin: 0; color: #7c8b93; font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+
+@media (max-width: 760px) {
+  .ticket-qr-box { width: 116px; height: 116px; }
+}

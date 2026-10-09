@@ -1,0 +1,64 @@
+# 技术设计规范
+
+## 技术选型
+
+- Vite + React + TypeScript，作为轻量客户端演示应用。
+- 依赖优先使用浏览器和 React 已有能力；引入新依赖前确认必要性并说明用途。
+- 首版无后端、无真实 API 和无认证。任何模拟行为都应在界面和代码边界中保持清晰。
+
+## 建议目录
+
+```text
+src/
+  App.tsx                应用壳、导航和页面编排
+  MonthlyThemeView.tsx   当月主题杂志页（DISCOVER）
+  DiscoverView.tsx       HOME / EXPLORE 栏目
+  EventsView.tsx         HOME / EVENTS
+  MarketView.tsx         HOME / SHOP（组件名沿用历史命名）
+  SpaceView.tsx          HOME / SPACE
+  IdentityView.tsx       IDENTITY
+  CollaborateView.tsx    COLLABORATE（合作与报名）
+  AboutView.tsx          ABOUT（品牌与联系）
+  components/            可复用的界面组件
+  data/                  类型化的演示数据与主题内容
+  unseen.css             应用壳与全局布局（基础层见 index.css）
+  theme.css / discover.css / ...  各页面样式
+  main.tsx               应用入口
+```
+
+保持实际结构与功能规模匹配。只有当代码量和职责确有需要时才拆分目录或引入路由库，不为未来假设过度抽象。
+
+## 导航与状态
+
+- 顶层导航为五个入口，分左右两组：左侧 `DISCOVER / HOME / IDENTITY`（进入 REVERIE 世界），右侧 `COLLABORATE / ABOUT`（和 REVERIE 发生关系）。桌面端主航栏 `.main-nav` 列出全部五项，右侧在 `COLLABORATE` 之前右对齐插入 `src/components/SocialMarks.tsx`（样式 `src/components/social-marks.css`，`margin-left: auto`，不加竖线，≤1000px 收起）：四个社交渠道标志 + 一条 `role="status"` 演示提示（4 秒后自动收起），地址统一取自 `src/data/social.ts`（ABOUT 的 CONTACT 也引用同一常量）；移动端（≤760px）底部导航 `.mobile-nav` 只渲染 `DISCOVER / HOME / IDENTITY` 三项，`COLLABORATE` 与 `ABOUT` 改由头部 `MORE ↗` 按钮打开 `src/components/MoreMenu.tsx`（样式 `src/components/more-menu.css`）选择——面板按需挂载，锁定滚动、Esc / 背板 / 关闭按钮均可关闭，关闭后由 `App.tsx` 把焦点交还给 `MORE` 按钮；选中子项后先切栏目再滚到对应区块。
+- `src/data/theme.ts` 的 `themeFeatured.items` 同时供 HOME › CONTENT 与 DISCOVER 的「特别推荐」使用；其中 `articles` 直接引用 `src/data/content.ts` 的 `contentTopics`（示范例子），因此两个页面的形式名称与顺序始终一致。依赖方向是 `theme.ts` → `content.ts` 单向（`content.ts` 不引用 `theme.ts`），新增引用时不要反向，以免循环。
+- 购票流程是弹层组件 `src/components/BookingFlow.tsx`（样式 `src/components/booking-flow.css`），只在点开屏 `BOOK TICKETS` 时挂载：挂载时把焦点移入浮层并锁定页面滚动，关闭（按钮 / Esc / 背板）后把焦点交还触发按钮；组件内部只持有“当前步骤”与手机号，卸载即丢弃。
+- 顶部两行 `.app-header` 与 `.main-nav` 在滚动时保持粘顶（`position: sticky`，`top: 0` / `top: var(--app-header-h)`），高度与 `--app-top-h` 写在 `unseen.css` 的 `:root`（≤760px 主导航行隐藏，`--app-nav-h` 为 `0px`）；DISCOVER 的 `.theme-tabs` 与 HOME 的 `.home-tabs` 都粘在 `top: var(--app-top-h)`，各自向外补出外壳内边距并带不透明背景。DISCOVER 的滚动落点与高亮判定（`MonthlyThemeView.tsx` 的 `topBarHeight()`）按实际测量高度计算，不写死数字。
+- EXPLORE 页的四处栏目引导与计划卡片在 `src/DiscoverView.tsx`（样式 `src/explore-guide.css`），映射规则集中在纯函数模块 `src/data/explore-guides.ts`：只对 `src/data/content.ts`（前 8 条专题）、`src/data/market.ts`（本期选品）、`src/data/spaces.ts` 与 `src/data/discover.ts`（体验与实验）做挑选与排序，不新增文案、不发请求。偏好选项文案也放在这里（`preferenceOptions`），筛选控件 `PreferenceControls` 与提示行 `activePreferenceLabels` 共用；`matchingExperiences` 从组件里移到该模块，推荐列表与计划卡片共用同一套规则；`planFor()` 按当前筛选从体验 / 空间里挑一条拼出计划（标题 / 说明 / 信息行均取自条目字段）。入口由 `App.tsx` 传入 `onOpenContent` / `onOpenShop` / `onOpenSpace` / `onOpenEvents` 切到对应的 HOME 栏目。
+- `HOME` 内部切换五个同级栏目 `EXPLORE / CONTENT / EVENTS / SHOP / SPACE`。`EXPLORE` 由 `src/DiscoverView.tsx` 渲染（组件名沿用历史命名，对应界面上的 EXPLORE 栏目），其余四栏为 `ContentView / EventsView / MarketView / SpaceView`（`MarketView` 同样保留历史文件名，界面上已是 `SHOP`）。
+- 初始原型可使用 React 状态完成页面切换；当浏览器前进/后退或可链接页面成为真实需求时，再评估路由库。
+- 演示数据与交互状态分离。数据集中在 `src/data/`，组件不散落复制业务内容。
+- 需要跨刷新保留的状态通过有版本前缀的 localStorage 键保存，并对读取值做解析、类型和异常处理；存储不可用时允许本次会话继续使用内存状态。
+- 当前键：`unseen:discover:v1`（EXPLORE 已选计划与三条「问题 → 小实验」的完成勾选 `planDone`；`experimentProgress` 已随小实验区块删除，旧数据读取时忽略）、`unseen:discover-preferences:v1`（共享偏好：兴趣方向 / 可用时长 / 出行方式；单次预算已删除，旧数据里的该字段读取时直接忽略）、`unseen:events:v1`、`unseen:market:v1`、`unseen:space:v1`、`unseen:identity:v1`、`unseen:theme:v1`（三道测试题的答案与锁定状态、24H 任务状态与当前任务示例序号、已预约的活动 id、梦游者昵称，昵称默认为空）、`unseen:location:v1`（顶部选择的国家城市，仅存城市 id）、`unseen:tickets:v1`（票据，仅存票号 / 对应活动）。主题页的滚动高亮板块、名录入口、当前轮播、活动表日期与购票步骤都只是界面状态，不写入存储（刷新后回到默认）。手机号字段有意不进入该键：它只存在 `BookingFlow` 组件内存中，关闭弹层或刷新即清空。
+- 关于主题页中真实场馆、品牌与价格：这些内容由项目方提供，仅作编辑推荐展示，界面上必须同时标明演示属性与“价格以官方渠道为准”，并且不实现购票、售卖、预约或报名。外部链接使用 `target="_blank"` 与 `rel="noreferrer noopener"`。
+- localStorage 仅保存演示进度、队伍意向、购物袋、空间预约意向、主题页交互状态和用户主动输入的非敏感文字。不要持久化手机号、认证凭据或秘密。
+- 为本地状态提供清晰的重置/恢复演示入口，避免过期数据使验收不可重复。
+
+## 数据和边界
+
+- 为推荐、活动、小队、商品、空间、实验、徽章和体验记录定义明确 TypeScript 类型。
+- 演示内容标记为虚构；文案不得伪装成真实交易或真实预约结果。
+- “AI 建议”使用确定性的预设模板或规则数据，不发送用户输入到外部服务。
+- 将模拟交易和预约封装为本地交互；不实现支付、库存扣减、票务或网络请求。
+- 购票演示的票种、价格与限购集中在 `src/data/theme.ts` 的 `themeTicket`（`梦游入场券`、`¥29.9 / 张`、1–10 张、演示说明），组件不硬编码价格；票数不写入存储，关闭弹层即回到默认 1 张。
+- 票据跨页面共享：`src/tickets.ts` 统一管理 `TicketRecord`（`id` / `index` / `activityId`）与本地存储键 `unseen:tickets:v1`，DISCOVER 的 `BookingFlow` 在付款那一刻写入，IDENTITY 的 `TicketVault`（`src/components/TicketVault.tsx`）读取并支持取消票据。票与活动的对应关系由 `buildTickets()` 按 `themeSchedule` 顺序分配，不随机。票据不包含昵称、手机号或支付信息；入场时间与场地以 `themeEntryDate` / `themeVenue` 为唯一来源，避免多处硬编码。下载票据图片由 `src/ticket-image.ts` 用 canvas 在本地生成，不发网络请求。
+- 「下载票据图片」由 `src/ticket-image.ts` 用 canvas 本地绘制（无第三方依赖、不发请求），返回是否真的生成成功，由调用方给出提示；下载图本身标注「演示票 · 不可入场」。二维码在正式方案确定前只呈现占位图形，不生成可扫描码。
+- 避免 `any`、不必要的全局状态库和过早的服务层。
+
+## 质量要求
+
+- 类型检查和生产构建必须通过后才能结束阶段。
+- 交互组件要有明确空状态、成功反馈和可重复演示的状态恢复方式。
+- 状态更新应保持一致；同一动作不能造成重复加入或重复确认。
+- 样式与业务逻辑分离，颜色和尺寸优先使用统一 CSS 自定义属性。颜色令牌集中在 `src/index.css` 的 `:root`（`--ink` / `--paper` / `--muted` / `--rule` / `--pink` / `--violet` / `--on-acid` / `--panel` / `--shade`）；视觉参考为项目方提供的《第一版 NEURO GROWTH.pdf》（深蓝底 + 酸黄 + 紫）。令牌名沿用历史命名，`--paper` 现为酸黄主文字色、`--pink` 现为紫色强调色。
+- 国家与城市选择器（`src/components/LocationPicker.tsx`）为界面偏好，不改变任何页面内容；数据在 `src/data/locations.ts`。需要在滚动列表里支持搜索、Esc 关闭并把焦点还给触发按钮、打开时聚焦搜索框。

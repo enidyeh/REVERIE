@@ -1,0 +1,81 @@
+/* =============================================================
+   UNSEEN · 表面与触控规范（在 main.tsx 最后引入）
+   项目方要求：
+   - 卡片与所有图片统一 10px 圆角
+   - 卡片带自然（柔和）投影
+   - 所有按钮统一 20px 圆角，圆形元素保持圆形
+   - 所有触控目标放大到至少 44×44
+   这里集中覆盖各页面样式表里零散的写法，避免逐文件重复。
+   ============================================================= */
+
+/* 1. 所有图片：10px 圆角 */
+img { border-radius: 10px; }
+
+/* 2. 卡片与面板：10px 圆角 + 自然投影 */
+.market-card,
+.market-feature,
+.market-cart-panel,
+.market-cart-item,
+.market-product-dialog,
+.event-feature,
+.event-listing,
+.event-team,
+.event-dialog,
+.space-feature,
+.space-listing,
+.space-reservation-result,
+.space-dialog,
+.explore-content-card,
+.explore-guide-card,
+.plan-entry,
+.explore-dialog,
+.content-featured-item,
+.identity-passport,
+.identity-badge,
+.identity-next-group,
+.identity-record-aside,
+.collab-entry,
+.collab-form-block,
+.collab-call-card,
+.theme-map-group,
+.theme-featured,
+.booking-sheet,
+.booking-ticket,
+.booking-issued-list li,
+.vault-sheet,
+.vault-item,
+.vault-menu,
+.vault-ticket,
+.more-panel,
+.location-panel,
+.social-notice {
+  border-radius: 10px;
+  box-shadow: 0 12px 26px rgba(2, 9, 18, .45), 0 2px 6px rgba(2, 9, 18, .3);
+}
+
+/* 3. 所有按钮：20px 圆角；圆形元素保持 50% */
+button,
+.text-link { border-radius: 20px; }.avatar-button, .social-mark, .event-listing-action, .space-listing-action, .plan-entry-check, .identity-timeline-marker, .collab-live-dot, .content-dot, .about-live-dot, .identity-live-dot, .events-curation-line i, .event-listing-copy i, .space-listing-copy > p i{ border-radius: 50%; }
+
+/* 4. 触控目标：按钮、表单控件与文字链接至少 44px 高。
+   用 :not() 提高一级特异性，才能盖过各页面里写死的 40/42px。 */
+button:not(.touch-inline),
+[role='button'],
+select,
+input,
+textarea,
+.text-link { min-height: 44px; }
+
+/* 品牌字标本身也是链接，同样放大到 44px 高 */
+.wordmark { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* 圆形图标按钮同时放大到 44×44，符合最小触控尺寸 */
+.avatar-button,
+.social-mark { width: 44px; height: 44px; }
+
+/* 联系方式一类的行内链接也补足到 44px 高 */
+.about-channel-value,
+.about-channel-link,
+.identity-card-link,
+.explore-text-action,
+.market-secondary-action { min-height: 44px; display: inline-flex; align-items: center; }

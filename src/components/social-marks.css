@@ -1,0 +1,11 @@
+/* 桌面端主航栏右侧的社交渠道标志：紧贴 COLLABORATE 分组，本身不再用竖线分隔。 */
+.social-marks { position: relative; display: flex; align-items: center; gap: 2px; margin: 0 32px 0 auto; padding: 0; }
+.social-mark { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: rgba(5, 17, 32, .72); cursor: pointer; }
+.social-mark:hover { color: var(--on-acid); }
+.social-mark:focus-visible { outline: 1px solid var(--on-acid); outline-offset: 2px; }
+.social-notice { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 12; width: max-content; max-width: min(320px, 70vw); margin: 0; padding: 8px 12px; border: 1px solid rgba(247, 248, 100, .5); background: var(--panel); color: var(--text); font: var(--text-xs)/1.6 var(--mono); text-align: center; }
+
+/* 窄一点的桌面宽度下，两行导航本身已经占满：先收起这排标志，避免把主航栏挤到溢出。 */
+@media (max-width: 1000px) {
+  .social-marks { display: none; }
+}

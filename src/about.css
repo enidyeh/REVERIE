@@ -1,0 +1,80 @@
+.about-page {
+  --about-muted: #9fadb4;
+  --about-text: #f7f864;
+  --about-rule: rgba(247, 248, 100, .18);
+}
+
+.about-eyebrow { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--about-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); letter-spacing: 0; }
+.about-live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px rgba(168, 155, 255, .6); }
+
+.about-heading { display: flex; justify-content: space-between; align-items: end; gap: 28px; padding: 42px 0 34px; }
+.about-heading h1 { margin: 15px 0 0; color: var(--about-text); font: 500 var(--title-lg)/var(--title-lg-leading) var(--sans); letter-spacing: 0; }
+.about-heading h1 span { color: var(--accent); }
+.about-heading-aside { max-width: 220px; margin: 0 0 5px; color: #b9c6ce; font-size: var(--text-md); line-height: 1.9; text-align: right; }
+
+.about-section-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--about-rule); }
+.about-section-heading h2 { margin: 10px 0 0; color: var(--about-text); font: 500 var(--title-md)/var(--title-md-leading) var(--sans); }
+.about-section-heading > span { color: var(--about-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); white-space: nowrap; }
+
+.about-definition { margin-top: 52px; }
+.about-definition-en { max-width: 700px; margin: 22px 0 0; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
+.about-definition-zh { max-width: 700px; margin: 10px 0 0; color: #b9c6ce; font-size: var(--text-md); line-height: 1.9; }
+.about-definition-body { max-width: 640px; margin: 16px 0 0; color: #b9c6ce; font-size: var(--text-md); line-height: 1.9; }
+
+/* 品牌卡片紧接上面的「我们关注年轻人正在喜欢…」一句，不再另起区块标题。 */
+.about-world { margin-top: 30px; }
+.about-world-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 0; padding: 1px; background: var(--about-rule); }
+.about-brand { min-height: 190px; padding: 22px 20px; background: var(--ink); }
+.about-brand-verb { margin: 0; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.about-brand h3 { margin: 16px 0 6px; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
+.about-brand-zh { margin: 0; color: #b79bff; font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.about-brand-line { margin: 14px 0 0; color: #b9c6ce; font-size: var(--text-sm); line-height: 1.85; }
+.about-world-note { max-width: 680px; margin: 18px 0 0; color: var(--about-muted); font-size: var(--text-sm); line-height: 1.85; }
+
+.about-story { margin-top: 52px; }
+.about-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 20px 0 0; padding: 1px; background: var(--about-rule); }
+.about-stats > div { min-height: 128px; display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 10px; padding: 18px 16px; background: var(--ink); }
+.about-stats dt { color: var(--about-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.about-stats dd { margin: 0; color: var(--about-text); font: 500 var(--title-md)/var(--title-md-leading) var(--mono); }
+.about-stat-note { margin: 12px 0 0; color: #7c8b93; font-size: var(--text-xs); }
+
+.about-photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 26px; }
+.about-photo { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0; border: 1px dashed rgba(247, 248, 100, .3); color: #7c8b93; }
+.about-photo figcaption { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--about-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); text-align: center; }
+.about-photo figcaption span { color: #7c8b93; }
+.about-story-line { margin: 20px 0 0; color: #b9c6ce; font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
+
+.about-contact { margin-top: 52px; }
+.about-contact-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+.about-contact-card { padding: 20px 18px; border: 1px solid var(--about-rule); }
+.about-contact-en { margin: 0; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.about-contact-card h3 { margin: 13px 0 8px; color: var(--about-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
+.about-contact-line { margin: 0; color: #b9c6ce; font-size: var(--text-sm); line-height: 1.8; }
+.about-contact-card ul { margin: 16px 0 0; padding: 0; list-style: none; }
+.about-contact-card li { display: flex; align-items: center; gap: 9px; min-height: 38px; border-top: 1px solid var(--about-rule); }
+.about-contact-card li svg { color: var(--accent); flex: 0 0 auto; }
+.about-channel-label { color: var(--about-text); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.about-channel-value { margin-left: auto; color: #7c8b93; font-size: var(--text-xs); }
+/* 已确认的渠道：可点，新窗口打开。 */
+.about-channel-link { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(168, 155, 255, .45); }
+.about-channel-link:hover { color: var(--about-text); }
+
+.about-disclosure { max-width: 720px; margin: 24px 0 0; color: #7c8b93; font-size: var(--text-xs); line-height: 1.7; }
+.about-footer-mark { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--about-rule); color: #7c8b93; font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.about-footer-mark a { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; color: var(--about-muted); text-decoration: none; border-bottom: 1px solid var(--about-rule); }
+.about-footer-mark a:hover { color: var(--about-text); }
+
+@media (max-width: 760px) {
+  .about-heading { display: block; padding: 32px 0 24px; }
+  .about-heading-aside { margin: 14px 0 0; text-align: left; }
+  .about-definition, .about-story, .about-contact { margin-top: 38px; }
+  .about-world { margin-top: 24px; }
+  .about-world-grid { grid-template-columns: 1fr; }
+  .about-brand { min-height: 0; }
+  .about-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .about-stats > div { min-height: 108px; }
+  .about-photos { grid-template-columns: 1fr; }
+  .about-photo { min-height: 108px; }
+  .about-contact-grid { grid-template-columns: 1fr; }
+  .about-footer-mark { flex-direction: column; gap: 8px; }
+}

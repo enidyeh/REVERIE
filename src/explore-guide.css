@@ -1,0 +1,44 @@
+/* EXPLORE 的栏目信息引导（CONTENT / SHOP / SPACE）：只做预览与入口。 */
+.explore-guide { margin-top: 46px; }
+.explore-guide-en { margin: 8px 0 0; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); letter-spacing: .06em; }
+.explore-section-actions { display: flex; align-items: center; gap: 14px; }
+.explore-guide-action { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border: 1px solid var(--explore-rule); background: transparent; color: var(--explore-text); font: var(--text-xs)/var(--text-xs-leading) var(--mono); letter-spacing: .06em; white-space: nowrap; cursor: pointer; }
+.explore-guide-action:hover { border-color: rgba(168, 155, 255, .6); color: var(--accent); }
+
+/* CONTENT 引导块：左侧图片，右侧标题与线上专题列表（排版参考精选体验卡）。 */
+.explore-content-card { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); margin-top: 21px; border: 1px solid var(--explore-rule); }
+.explore-content-image { position: relative; min-height: 320px; margin: 0; overflow: hidden; background: #081627; }
+.explore-content-image img { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; filter: saturate(.78); }
+.explore-content-image figcaption { position: absolute; z-index: 1; left: 14px; bottom: 12px; color: var(--explore-text); font: var(--text-xs)/var(--text-xs-leading) var(--mono); text-shadow: 0 1px 6px rgba(5, 17, 32, .8); }
+.explore-content-body { min-width: 0; display: flex; flex-direction: column; padding: 24px 22px; }
+.explore-content-body h2 { margin: 9px 0 0; color: var(--explore-text); font: 500 var(--title-md)/var(--title-md-leading) var(--sans); }
+.explore-content-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--explore-rule); }
+.explore-topic-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 18px 0 0; padding: 0; list-style: none; }
+.explore-topic-list li { display: flex; align-items: baseline; gap: 11px; min-height: 44px; padding: 12px 14px 12px 0; border-bottom: 1px solid var(--explore-rule); color: var(--explore-text); font-size: var(--text-sm); }
+.explore-topic-list li span { flex: 0 0 auto; color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+
+.explore-guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 21px; }
+.explore-guide-card { padding-bottom: 14px; border: 1px solid var(--explore-rule); }
+.explore-guide-card img { width: 100%; height: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; filter: saturate(.78); }
+.explore-guide-card .explore-eyebrow { margin: 14px 14px 0; }
+.explore-guide-card h3 { margin: 7px 14px 0; color: var(--explore-text); font: 500 var(--title-sm)/var(--title-sm-leading) var(--sans); }
+.explore-guide-meta { margin: 8px 14px 0; color: var(--explore-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.explore-guide-note { margin: 16px 0 0; color: var(--explore-muted); font-size: var(--text-xs); line-height: 1.85; }
+/* 偏好提示：说明下面的内容会按筛选结果变化。 */
+.explore-guide-hint { grid-column: 1 / -1; margin: 0; color: var(--explore-muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+
+@media (max-width: 760px) {
+  .explore-guide { margin-top: 34px; }
+  .explore-section-actions { flex-direction: column; align-items: flex-end; gap: 8px; }
+  .explore-guide-action { padding: 0 11px; }
+  .explore-topic-list { grid-template-columns: 1fr; }
+  .explore-guide-grid { grid-template-columns: 1fr; gap: 12px; }
+  .explore-guide-card img { aspect-ratio: 16 / 9; }
+}
+
+@media (max-width: 760px) {
+  .explore-content-card { grid-template-columns: 1fr; }
+  .explore-content-image { min-height: 0; aspect-ratio: 16 / 9; }
+  .explore-content-body { padding: 20px 18px; }
+  .explore-content-foot { flex-direction: column; align-items: flex-start; gap: 10px; }
+}

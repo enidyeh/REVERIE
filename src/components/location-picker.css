@@ -1,0 +1,56 @@
+.location-trigger {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font: var(--text-sm)/var(--text-sm-leading) var(--mono);
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.location-trigger:hover { border-color: var(--rule); color: var(--text); }
+.location-trigger[aria-expanded='true'] { border-color: var(--rule); color: var(--text); }
+.location-trigger > svg:first-child { color: var(--accent); flex: 0 0 auto; }
+.location-trigger > svg:last-child { color: var(--muted); flex: 0 0 auto; }
+
+.location-overlay { position: fixed; z-index: 40; inset: 0; display: flex; justify-content: center; align-items: flex-start; padding: 72px 24px 24px; background: rgba(5, 17, 32, .72); backdrop-filter: blur(3px); }
+.location-panel { width: 100%; max-width: 560px; max-height: min(78vh, 720px); display: flex; flex-direction: column; padding: 20px 20px 0; border: 1px solid rgba(247, 248, 100, .28); background: #0a1b2e; }
+.location-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.location-panel-eyebrow { margin: 0; color: var(--muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.location-panel-head h2 { margin: 10px 0 0; color: var(--text); font: 500 var(--title-md)/var(--title-md-leading) var(--sans); }
+.location-close { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--rule); background: transparent; color: var(--text); cursor: pointer; }
+.location-close:hover { border-color: rgba(168, 155, 255, .6); }
+
+.location-search { display: flex; align-items: center; gap: 9px; min-height: 46px; margin-top: 18px; padding: 0 12px; border: 1px solid var(--rule); background: #081627; }
+.location-search svg { color: var(--accent); flex: 0 0 auto; }
+.location-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: var(--text-sm); }
+.location-search input::placeholder { color: #7c7670; }
+
+.location-current { margin: 14px 0 0; color: var(--muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+
+.location-scroll { margin-top: 12px; padding-bottom: 16px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.location-group + .location-group { margin-top: 8px; }
+.location-group-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0; padding: 12px 0 8px; background: #0a1b2e; border-bottom: 1px solid var(--rule); color: var(--accent); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.location-group-head b { color: var(--muted); font-weight: 400; }
+.location-group ul { margin: 0; padding: 0; list-style: none; }
+.location-city { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 1px solid transparent; border-top: 0; background: transparent; color: #b9c6ce; font-size: var(--text-sm); cursor: pointer; text-align: left; }
+.location-city:hover { border-color: var(--rule); background: rgba(247, 248, 100, .04); color: var(--text); }
+.location-city-zh { flex: 0 0 auto; }
+.location-city-en { color: var(--muted); font: var(--text-xs)/var(--text-xs-leading) var(--mono); }
+.location-city svg { margin-left: auto; color: var(--accent); }
+.location-city.is-selected { border-color: rgba(168, 155, 255, .55); background: rgba(168, 155, 255, .1); color: var(--text); }
+.location-empty { margin: 18px 0; color: var(--muted); font-size: var(--text-sm); }
+
+.location-note { margin: 0; padding: 14px 0; border-top: 1px solid var(--rule); color: #7c8b93; font-size: var(--text-xs); line-height: 1.7; }
+
+@media (max-width: 760px) {
+  .location-trigger { padding: 0 4px; }
+  .location-trigger span { font-size: var(--text-xs); }
+  .location-overlay { align-items: flex-end; padding: 0; }
+  .location-panel { max-width: none; max-height: 84svh; padding: 18px 16px 0; border-width: 1px 0 0; }
+  .location-panel-head h2 { margin-top: 8px; }
+}

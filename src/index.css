@@ -1,0 +1,76 @@
+/* =============================================================
+   UNSEEN · 基础层（唯一的字体与标题层级来源）
+   字体：中文只用黑体，不再使用宋体；正文全部同一个字号
+   字号：只有两档——标题（内部递进三级）与正文（统一 13px）
+   ============================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* 字体族：--en 放在中文族之前，英文才只会使用等宽字体 */
+  --en: 'SFMono-Regular', Menlo, Consolas, monospace;
+  --zh-sans: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --sans: var(--en), var(--zh-sans);
+  --mono: var(--en);
+
+  /* 标题：同一档，内部递进三级 */
+  --title-lg: 40px;
+  --title-lg-leading: 1.24;
+  --title-md: 28px;
+  --title-md-leading: 1.35;
+  --title-sm: 18px;
+  --title-sm-leading: 1.5;
+
+  /* 正文：所有正文、标注、按钮、元数据统一用这一个字号 */
+  --text-md: 13px;
+  --text-md-leading: 1.85;
+  --text-sm: 13px;
+  --text-sm-leading: 1.8;
+  --text-xs: 13px;
+  --text-xs-leading: 1.7;
+
+  /* 色彩：参考项目方提供的第一版 NEURO GROWTH 视觉（深海军蓝底 + 酸黄主色 + 紫强调）。
+     令牌名沿用历史命名：--ink 底色、--text 主文字与标题、--accent 强调、--accent-fill 深强调。 */
+  --ink: #051120;
+  --text: #f7f864;
+  --muted: #8e9ba3;
+  --rule: rgba(247, 248, 100, .26);
+  --accent-fill: #8b7ce8;
+  --accent: #a89bff;
+  --blue: #a89bff;
+  /* 深色文字（用在酸黄底上）、抬升面与图片遮罩 */
+  --on-acid: #051120;
+  --panel: #0a1b2e;
+  --shade: rgba(5, 17, 32, .88);
+
+  color: var(--text);
+  background: var(--ink);
+  font: var(--text-md)/var(--text-md-leading) var(--sans);
+  letter-spacing: 0;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 移动端沿用同一套字号，只把标题缩小；正文保持 13px 便于看清楚 */
+@media (max-width: 760px) {
+  :root {
+    --title-lg: 30px;
+    --title-md: 22px;
+    --title-sm: 16px;
+  }
+}
+
+html { min-width: 320px; background: var(--ink); scroll-behavior: smooth; }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--ink); }
+#root { width: 100%; max-width: none; min-height: 100svh; margin: 0; border: 0; text-align: left; }
+*, *::before, *::after { box-sizing: border-box; }
+button, input, select, textarea { color: inherit; font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+::selection { color: var(--ink); background: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
