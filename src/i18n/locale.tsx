@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { loadLocale, localeStorageKey, type Locale } from './messages'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { loadLocale, localeStorageKey, type Locale, type Localized } from './messages'
+import { applySiteMeta } from './meta'
 import { LocaleContext } from './context'
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
@@ -12,11 +13,17 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       // 本地存储不可用时只在本次会话内生效。
     }
     document.documentElement.lang = locale === 'en' ? 'en' : 'zh-CN'
+    applySiteMeta(locale)
   }, [locale])
 
-  return (
-    <LocaleContext.Provider value={{ locale, setLocale, t: (value) => (locale === 'en' ? value.en : value.zh) }}>
-      {children}
-    </LocaleContext.Provider>
+  const value = useMemo(
+    () => ({
+      locale,
+      setLocale,
+      t: <T,>(item: Localized<T>) => (locale === 'en' ? item.en : item.zh),
+    }),
+    [locale],
   )
+
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }

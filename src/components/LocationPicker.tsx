@@ -84,7 +84,7 @@ function LocationPicker({ onSelect }: { onSelect?: () => void }) {
         onClick={togglePicker}
       >
         <MapPin size={13} aria-hidden="true" />
-        <span>{locationLabel(location)}</span>
+        <span>{locationLabel(location, locale)}</span>
         <ChevronDown size={12} aria-hidden="true" />
       </button>
       {open && (

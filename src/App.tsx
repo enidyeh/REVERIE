@@ -92,7 +92,7 @@ function App() {
         </div>
         <button className="avatar-button" type="button" onClick={() => setSection('identity')} aria-label={t(shell.profile)}>E<span>01</span></button>
         <button className="header-more" type="button" ref={moreButtonRef} onClick={() => setMoreOpen(true)} aria-label={t(shell.more)} aria-haspopup="dialog" aria-expanded={moreOpen}>
-          MORE<ArrowUpRight size={14} aria-hidden="true" />
+          {t(shell.moreButton)}<ArrowUpRight size={14} aria-hidden="true" />
         </button>
       </header>
 

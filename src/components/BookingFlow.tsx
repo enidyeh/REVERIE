@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Check, CreditCard, Minus, Plus, Ticket, X } from 'lucide-react'
-import { themeEntryDate, themeTicket, themeVenue } from '../data/theme'
+import { themeEntryDate, themeMeta, themeTicket, themeVenue } from '../data/theme'
 import { activityOrder, buildTickets, loadTickets, persistTickets, ticketActivity, ticketNumber, type TicketRecord } from '../tickets'
+import { bookingCopy as copy, themeCopy } from '../i18n/discover'
+import { pick } from '../i18n/localize'
+import { useLocale } from '../i18n/use-locale'
 import './booking-flow.css'
 import './ticket-qr.css'
 
-// 入场信息以项目方提供的原文为准，写在流程每一步里。
+// 入场日期与场地以项目方提供的原文为准，写在流程每一步里。
 const entryDate = themeEntryDate
-const entryLocation = `SHANGHAI · ${themeVenue}`
 
 function formatPrice(value: number) {
   return `¥${Number(value.toFixed(2))}`
@@ -15,10 +17,10 @@ function formatPrice(value: number) {
 
 type BookingStep = 'login' | 'pay' | 'ticket'
 
-const steps: { id: BookingStep; index: string; label: string }[] = [
-  { id: 'login', index: '01', label: '登录' },
-  { id: 'pay', index: '02', label: '付款' },
-  { id: 'ticket', index: '03', label: '得到票' },
+const steps: { id: BookingStep; index: string }[] = [
+  { id: 'login', index: '01' },
+  { id: 'pay', index: '02' },
+  { id: 'ticket', index: '03' },
 ]
 
 type BookingFlowProps = {
@@ -28,13 +30,15 @@ type BookingFlowProps = {
   onDreamerNameChange: (value: string) => void
 }
 
-function maskPhone(phone: string) {
-  if (phone.length === 0) return '未填写'
+function maskPhone(phone: string, fallback: string) {
+  if (phone.length === 0) return fallback
   return phone.length === 11 ? `${phone.slice(0, 3)}****${phone.slice(7)}` : phone
 }
 
 // 弹层在打开时才挂载，因此每次打开都是从第一步开始、手机号为空的新流程。
 export function BookingFlow({ onClose, onOpenTickets, dreamerName, onDreamerNameChange }: BookingFlowProps) {
+  const { t, locale } = useLocale()
+  const entryLocation = t(copy.venueLine)(t(themeVenue))
   const [step, setStep] = useState<BookingStep>('login')
   // 手机号只存在组件内存里：关闭弹层即清空，不写入 localStorage（见 docs/quality-security.md）。
   const [phone, setPhone] = useState('')
@@ -99,89 +103,89 @@ export function BookingFlow({ onClose, onOpenTickets, dreamerName, onDreamerName
         className="booking-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="购票流程"
+        aria-label={t(copy.flowLabel)}
         ref={sheetRef}
         tabIndex={-1}
       >
         <div className="booking-head">
           <p className="booking-eyebrow"><Ticket size={13} aria-hidden="true" />WONDERLAND TICKET</p>
-          <button className="booking-close" type="button" onClick={close} aria-label="关闭购票流程"><X size={18} aria-hidden="true" /></button>
+          <button className="booking-close" type="button" onClick={close} aria-label={t(copy.close)}><X size={18} aria-hidden="true" /></button>
         </div>
 
         <ol className="booking-steps">
-          {steps.map((item) => (
+          {steps.map((item, index) => (
             <li className={`booking-step ${step === item.id ? 'is-active' : ''}`} key={item.id} aria-current={step === item.id ? 'step' : undefined}>
-              <b>{item.index}</b>{item.label}
+              <b>{item.index}</b>{t(copy.steps)[index]}
             </li>
           ))}
         </ol>
 
         <dl className="booking-when">
           <div>
-            <dt>ENTRY DATE / 入梦日期</dt>
+            <dt>{t(themeCopy.entryDate)}</dt>
             <dd>{entryDate}</dd>
           </div>
           <div>
-            <dt>LOCATION / 入梦坐标</dt>
+            <dt>{t(themeCopy.location)}</dt>
             <dd>{entryLocation}</dd>
           </div>
         </dl>
 
         {step === 'login' && (
           <div className="booking-body">
-            <p className="booking-note">第一步「登录」：本站没有真实账号系统，这一步就是填写昵称与手机号。手机号只保存在当前页面的内存里，关闭或刷新即消失，不写入本机存储、不上传、不发送短信。</p>
+            <p className="booking-note">{t(copy.stepNotes)[0]}</p>
             <div className="booking-field">
-              <label htmlFor="booking-name">DREAMER NAME｜梦游者昵称</label>
+              <label htmlFor="booking-name">{t(copy.nameLabel)}</label>
               <input
                 id="booking-name"
                 maxLength={18}
-                placeholder="E."
+                placeholder={t(copy.namePlaceholder)}
                 value={dreamerName}
                 onChange={(event) => onDreamerNameChange(event.target.value)}
               />
             </div>
             <div className="booking-field">
-              <label htmlFor="booking-phone">DREAMER PHONE｜梦游者手机号码</label>
+              <label htmlFor="booking-phone">{t(copy.phoneLabel)}</label>
               <input
                 id="booking-phone"
                 autoComplete="tel"
                 inputMode="tel"
                 maxLength={11}
-                placeholder="11 位手机号"
+                placeholder={t(copy.phonePlaceholder)}
                 value={phone}
                 onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 11))}
               />
-              <span className="booking-hint">演示字段：只保存在本次操作的页面内存中</span>
+              <span className="booking-hint">{t(copy.memoryHint)}</span>
             </div>
             <div className="booking-field">
-              <span className="booking-label">TICKETS｜票数</span>
-              <div className="booking-count" role="group" aria-label="票数">
+              <span className="booking-label">{t(copy.ticketsLabel)}</span>
+              <div className="booking-count" role="group" aria-label={t(copy.ticketsLabel)}>
                 <button
                   className="booking-count-button"
                   type="button"
-                  aria-label="减少一张"
+                  aria-label={t(copy.removeOne)}
                   disabled={count <= themeTicket.minCount}
                   onClick={() => changeCount(-1)}
                 >
                   <Minus size={14} aria-hidden="true" />
                 </button>
-                <span className="booking-count-value" aria-live="polite">{count} 张</span>
+                <span className="booking-count-value" aria-live="polite">{t(copy.count)(count)}</span>
                 <button
                   className="booking-count-button"
                   type="button"
-                  aria-label="增加一张"
+                  aria-label={t(copy.addOne)}
                   disabled={count >= themeTicket.maxCount}
                   onClick={() => changeCount(1)}
                 >
                   <Plus size={14} aria-hidden="true" />
                 </button>
-                <span className="booking-count-price">{formatPrice(themeTicket.price)} / 张 · 合计 {formatPrice(total)}</span>
+                <span className="booking-count-price">{t(copy.priceEach)(formatPrice(themeTicket.price), formatPrice(total))}</span>
               </div>
-              <span className="booking-hint">演示：最多 {themeTicket.maxCount} 张，不填写任何信息也可直接去付款（默认 1 张）。</span>
+              <span className="booking-hint">{t(copy.maxHint)(themeTicket.maxCount)}</span>
             </div>
             <div className="booking-actions">
               <button className="theme-primary-action" type="button" onClick={() => setStep('pay')}>
-                <CreditCard size={15} aria-hidden="true" />去付款
+                <CreditCard size={15} aria-hidden="true" />{t(copy.toPayment)}
               </button>
             </div>
           </div>
@@ -189,13 +193,13 @@ export function BookingFlow({ onClose, onOpenTickets, dreamerName, onDreamerName
 
         {step === 'pay' && (
           <div className="booking-body">
-            <p className="booking-note">第二步「付款」：本站不接入真实支付，这里不会产生订单、不会扣款，也不会把信息提交给任何服务。</p>
+            <p className="booking-note">{t(copy.stepNotes)[1]}</p>
             <p className="booking-amount">
-              应付｜TOTAL <b>{formatPrice(total)}</b>
-              <span>{count} 张 × {formatPrice(themeTicket.price)}</span>
+              {t(copy.totalLabel)} <b>{formatPrice(total)}</b>
+              <span>{t(copy.count)(count)} × {formatPrice(themeTicket.price)}</span>
             </p>
             <fieldset className="booking-pay">
-              <legend>支付方式｜PAYMENT</legend>
+              <legend>{t(copy.paymentLegend)}</legend>
               <div className="booking-pay-list">
                 {themeTicket.payMethods.map((method) => (
                   <label className={`booking-pay-option ${payMethod === method.id ? 'is-picked' : ''}`} key={method.id}>
@@ -206,18 +210,18 @@ export function BookingFlow({ onClose, onOpenTickets, dreamerName, onDreamerName
                       checked={payMethod === method.id}
                       onChange={() => setPayMethod(method.id)}
                     />
-                    <span>{method.name}</span>
+                    <span>{t(method.name)}</span>
                   </label>
                 ))}
               </div>
             </fieldset>
-            <p className="booking-hint">演示：不会调用支付宝 / 微信 / 银行卡，也不会产生订单或扣款；票价 {formatPrice(themeTicket.price)} / 张为演示票价，正式价格以官方渠道为准。</p>
+            <p className="booking-hint">{t(copy.payHint)(formatPrice(themeTicket.price))}</p>
             <div className="booking-actions">
               <button className="theme-primary-action" type="button" onClick={confirmPay}>
-                <CreditCard size={15} aria-hidden="true" />确认付款（演示）
+                <CreditCard size={15} aria-hidden="true" />{t(copy.confirmPayment)}
               </button>
               <button className="theme-secondary-action" type="button" onClick={() => setStep('login')}>
-                <ArrowLeft size={14} aria-hidden="true" />返回上一步
+                <ArrowLeft size={14} aria-hidden="true" />{t(copy.back)}
               </button>
             </div>
           </div>
@@ -225,33 +229,33 @@ export function BookingFlow({ onClose, onOpenTickets, dreamerName, onDreamerName
 
         {step === 'ticket' && (
           <div className="booking-body">
-            <p className="booking-note">第三步「得到票」：付款后可在 IDENTITY › UNSEEN® / CITY PASSPORT 查看票据。</p>
-            <p className="booking-hint">演示：票据已存入本机浏览器（不包含手机号），可在 CITY PASSPORT 里查看并确认保存；票面二维码为占位，不可入场。</p>
+            <p className="booking-note">{t(copy.stepNotes)[2]}</p>
+            <p className="booking-hint">{t(copy.ticketStoredHint)}</p>
             <div className="booking-ticket">
               <div className="booking-ticket-top">
                 <span>REVERIE WONDERLAND</span>
                 <span>ISSUE 002</span>
               </div>
-              <p className="booking-ticket-mark" aria-hidden="true">夢</p>
+              <p className="booking-ticket-mark" aria-hidden="true">{t(copy.seal)}</p>
               <dl className="booking-ticket-body">
-                <div><dt>DREAMER NAME｜梦游者昵称</dt><dd>{name || '未填写'}</dd></div>
-                <div><dt>DREAMER PHONE｜梦游者手机号码</dt><dd>{maskPhone(phone)}</dd></div>
-                <div><dt>TICKETS｜票数</dt><dd>{count} 张</dd></div>
-                <div><dt>AMOUNT｜合计</dt><dd>{formatPrice(total)}</dd></div>
-                <div><dt>STATUS｜状态</dt><dd>DEMO TICKET · 不可入场</dd></div>
+                <div><dt>{t(copy.nameLabel)}</dt><dd>{name || t(copy.notProvided)}</dd></div>
+                <div><dt>{t(copy.phoneLabel)}</dt><dd>{maskPhone(phone, t(copy.notProvided))}</dd></div>
+                <div><dt>{t(copy.ticketsLabel)}</dt><dd>{t(copy.count)(count)}</dd></div>
+                <div><dt>{t(copy.amountLabel)}</dt><dd>{formatPrice(total)}</dd></div>
+                <div><dt>{t(copy.statusLabel)}</dt><dd>{t(copy.demoNotValid)}</dd></div>
               </dl>
               <div className="booking-issue">
                 {issued.length > 0 && (
                   <div className="booking-issue-text">
-                    <p className="booking-issued-label">本次发放｜{issued.length} 张（每张对应一场活动）</p>
+                    <p className="booking-issued-label">{t(copy.issued)(issued.length)}</p>
                     <ul className="booking-issued-list">
                       {issued.map((ticket) => {
                         const activity = ticketActivity(ticket)
                         return (
                           <li key={ticket.id}>
-                            <span className="booking-issued-no">第 {ticketNumber(ticket.index)} 张票</span>
-                            <span className="booking-issued-name">活动 {activityOrder(ticket.activityId)} · {activity?.name}</span>
-                            <span className="booking-issued-meta">{activity?.day} {activity?.time} · SHANGHAI</span>
+                            <span className="booking-issued-no">{t(copy.ticketNo)(ticketNumber(ticket.index))}</span>
+                            <span className="booking-issued-name">{t(copy.sessionNo)(activityOrder(ticket.activityId), activity ? pick(locale, activity.name) : '')}</span>
+                            <span className="booking-issued-meta">{activity?.day} {activity?.time} · {t(themeMeta.city)}</span>
                           </li>
                         )
                       })}
@@ -259,24 +263,24 @@ export function BookingFlow({ onClose, onOpenTickets, dreamerName, onDreamerName
                   </div>
                 )}
                 <div className="booking-issue-qr">
-                  <div className="ticket-qr-box" role="img" aria-label="临时二维码占位"><span>QR</span></div>
-                  <p>临时二维码占位：正式版会在这里显示可用于入场的动态码；演示阶段无法扫描。</p>
+                  <div className="ticket-qr-box" role="img" aria-label={t(copy.qrAria)}><span>{t(copy.qrBox)}</span></div>
+                  <p>{t(copy.qrNote)}</p>
                 </div>
               </div>
-              <p className="booking-ticket-note">演示票：不产生任何订单或扣款，也不能用于入场；票面信息与二维码均为占位。入梦日期与入梦坐标见弹层顶部。</p>
+              <p className="booking-ticket-note">{t(copy.demoNote)}</p>
             </div>
             <div className="booking-actions">
               <button className="theme-primary-action" type="button" onClick={close}>
-                <Check size={15} aria-hidden="true" />完成
+                <Check size={15} aria-hidden="true" />{t(copy.done)}
               </button>
               <button className="theme-secondary-action" type="button" onClick={onOpenTickets}>
-                <Ticket size={14} aria-hidden="true" />查看票夹
+                <Ticket size={14} aria-hidden="true" />{t(copy.openWallet)}
               </button>
               <button className="theme-secondary-action" type="button" onClick={() => setStep('login')}>
-                <ArrowLeft size={14} aria-hidden="true" />重新填写
+                <ArrowLeft size={14} aria-hidden="true" />{t(copy.restart)}
               </button>
             </div>
-            <p className="booking-hint">票夹在 IDENTITY › UNSEEN® / CITY PASSPORT 的「我的票据」里；在那里可以逐张查看票面并确认保存。</p>
+            <p className="booking-hint">{t(copy.walletHint)}</p>
           </div>
         )}
       </div>

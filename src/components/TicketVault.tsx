@@ -3,6 +3,8 @@ import { ArrowLeft, Check, Download, MoreHorizontal, Ticket, X } from 'lucide-re
 import { themeEntryDate, themeVenue } from '../data/theme'
 import { activityOrder, ticketActivity, ticketNumber, type TicketRecord } from '../tickets'
 import { downloadTicketImage } from '../ticket-image'
+import { pick } from '../i18n/localize'
+import { useLocale } from '../i18n/use-locale'
 import './ticket-vault.css'
 import './ticket-qr.css'
 
@@ -14,6 +16,7 @@ type TicketVaultProps = {
 
 // 打开时才挂载：进入即显示票据列表，点某一张进入票面详情。
 export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultProps) {
+  const { locale } = useLocale()
   const [openId, setOpenId] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmingCancel, setConfirmingCancel] = useState(false)
@@ -83,7 +86,7 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
 
   async function saveImage() {
     if (!opened) return
-    const created = await downloadTicketImage(opened)
+    const created = await downloadTicketImage(opened, locale)
     setNotice(created
       ? '已生成票据图片（演示票，不可入场）；若浏览器没有自动下载，请检查下载设置。'
       : '演示：当前环境无法生成票据图片。')
@@ -135,9 +138,9 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
               <p className="vault-ticket-mark" aria-hidden="true">夢</p>
               <dl className="vault-ticket-body">
                 <div><dt>票号｜TICKET NO.</dt><dd>第 {ticketNumber(opened.index)} 张票<span>{opened.id}</span></dd></div>
-                <div><dt>活动｜EVENT</dt><dd>活动 {activityOrder(opened.activityId)} · {openedActivity.name}<span>{openedActivity.nameEn} · {openedActivity.kind}</span></dd></div>
+                <div><dt>活动｜EVENT</dt><dd>活动 {activityOrder(opened.activityId)} · {pick(locale, openedActivity.name)}<span>{pick(locale, openedActivity.kind)}</span></dd></div>
                 <div><dt>活动时间｜TIME</dt><dd>{openedActivity.day} {openedActivity.time}</dd></div>
-                <div><dt>活动地点｜VENUE</dt><dd>SHANGHAI · {themeVenue}</dd></div>
+                <div><dt>活动地点｜VENUE</dt><dd>SHANGHAI · {pick(locale, themeVenue)}</dd></div>
                 <div><dt>票期｜ENTRY DATE</dt><dd>{themeEntryDate}</dd></div>
               </dl>
               <div className="ticket-qr">
@@ -184,8 +187,8 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
                           <span className="vault-item-top">
                             <b>第 {ticketNumber(ticket.index)} 张票</b>
                           </span>
-                          <span className="vault-item-activity">活动 {activityOrder(ticket.activityId)} · {activity.name}</span>
-                          <span className="vault-item-meta">{activity.day} {activity.time} · {activity.kind} · SHANGHAI</span>
+                          <span className="vault-item-activity">活动 {activityOrder(ticket.activityId)} · {pick(locale, activity.name)}</span>
+                          <span className="vault-item-meta">{activity.day} {activity.time} · {pick(locale, activity.kind)} · SHANGHAI</span>
                         </button>
                       </li>
                     )

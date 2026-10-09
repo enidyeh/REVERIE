@@ -1,5 +1,7 @@
 // 国家与城市选择器数据。当前仅有上海的演示内容，其他城市仅作为可选项存在。
 
+import type { Locale } from '../i18n/messages'
+
 export type City = { id: string; zh: string; en: string }
 
 export type Country = {
@@ -227,6 +229,6 @@ export function resolveLocation(cityId: string): SelectedLocation {
   return { city: fallbackCity.zh, cityEn: fallbackCity.en, country: fallbackCountry.zh, countryEn: fallbackCountry.en, countryCode: fallbackCountry.code }
 }
 
-export function locationLabel(location: SelectedLocation) {
-  return `${location.cityEn}, ${location.countryCode}`
+export function locationLabel(location: SelectedLocation, locale: Locale = 'zh') {
+  return locale === 'en' ? `${location.cityEn}, ${location.countryCode}` : location.city
 }

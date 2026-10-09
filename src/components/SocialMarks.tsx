@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { socialMarks } from '../data/social'
+import { socialMarksCopy as copy } from '../i18n/shell'
+import { useLocale } from '../i18n/use-locale'
+import { useLocalized } from '../i18n/use-localized'
 import './social-marks.css'
 
 // 四个渠道的简笔标志：统一 18px、单色描边，跟随 currentColor。
@@ -49,6 +52,8 @@ function MarkGlyph({ id }: { id: string }) {
 
 // 桌面端主航栏中间的一排社交入口：IDENTITY 与 COLLABORATE 之间。
 export function SocialMarks() {
+  const { t } = useLocale()
+  const marks = useLocalized(socialMarks)
   const [notice, setNotice] = useState('')
 
   // 提示 4 秒后自动收起，避免一直占着导航下方。
@@ -59,8 +64,8 @@ export function SocialMarks() {
   }, [notice])
 
   return (
-    <div className="social-marks" aria-label="REVERIE 社交渠道">
-      {socialMarks.map((mark) =>
+    <div className="social-marks" aria-label={t(copy.container)}>
+      {marks.map((mark) =>
         mark.href ? (
           <a
             className="social-mark"
@@ -69,8 +74,8 @@ export function SocialMarks() {
             target="_blank"
             rel="noreferrer noopener"
             title={mark.label}
-            aria-label={`${mark.label}（新窗口打开）`}
-            onClick={() => setNotice(`${mark.label}：${mark.note}`)}
+            aria-label={t(copy.openInNewTab)(mark.label)}
+            onClick={() => setNotice(t(copy.notice)(mark.label, mark.note ?? ''))}
           >
             <MarkGlyph id={mark.id} />
           </a>
@@ -80,8 +85,8 @@ export function SocialMarks() {
             key={mark.id}
             type="button"
             title={mark.label}
-            aria-label={`${mark.label}（演示，尚无链接）`}
-            onClick={() => setNotice(`${mark.label}：${mark.note}`)}
+            aria-label={t(copy.demoNoLink)(mark.label)}
+            onClick={() => setNotice(t(copy.notice)(mark.label, mark.note ?? ''))}
           >
             <MarkGlyph id={mark.id} />
           </button>

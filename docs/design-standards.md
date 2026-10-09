@@ -6,6 +6,16 @@ UNSEEN 应像一本记录个人真实生活的移动杂志：编辑式排版、�
 
 2026-10-09 起视觉参考项目方提供的《第一版 NEURO GROWTH.pdf》：深海军蓝底、酸黄主文字与黄条导航、紫色强调、10px 圆角的卡片与图片、20px 圆角按钮、克制的自然投影；只参考视觉，内容与页面框架不变。
 
+## 语言与双语
+
+站点是**中文 / English 两个独立版本**，由页头国家城市选择器右侧的语言图标切换；同一页只出现一种语言的正文，不采用「一段中文下面跟一段英文」的写法。
+
+- **中文版**：页面内的眉题与子标签一律中文。纯英文眉题（`FEATURED`、`WHAT'S INSIDE`、`EVENT SCHEDULE`、`DIRECTORY`、`DREAM ARCHETYPE` 等）直接删除或改写为中文；双语标签只留中文（`入梦日期` / `入梦坐标` / `着装建议` / `现场布景风格` / `梦境原型`）。**保留英文的只有品牌与体系标识**：主导航 `DISCOVER / HOME / IDENTITY / COLLABORATE / ABOUT`、字标 `REVERIE®` / `UNSEEN®`、`UNSEEN® / CITY PASSPORT`、页脚 `AS WE WANDER, WE BECOME.` / `UNSEEN® / SHANGHAI`，以及展位号、票号、`ISSUE 002` 这类编号与品类专名（`Cos` / `Lolita` / `BJD` / `Instagram` 等）。
+- **英文版**：不出现任何中文（专有名词 `REVERIE` / `UNSEEN BOX` / `REALMVIEW` 除外）。眉题保留英文大写体，与中文版同一套栅格。
+- 中文版此前「英文眉题 + 中文正文」的编辑感混排**已作废**；等宽英文字体现在只承担编号、日期、坐标、数值与标识。
+- 断行按语言分别处理：例如 DISCOVER 主标题中文保持错位的两行（`梦 游` / `仙 境`，第二行用 `--accent`），英文为一行 `IN THE WONDERLAND`。
+- 英文比中文长约 1.5–2 倍：固定宽度的标签、三层 tab、卡片标题与票据 canvas 需要按语言分别确认不溢出（canvas 用逐级缩小字号的 `fitText` 兜底）。
+
 ## 色彩
 
 视觉参考：项目方提供的《第一版 NEURO GROWTH.pdf》（深海军蓝底 + 酸黄主色 + 紫强调）。

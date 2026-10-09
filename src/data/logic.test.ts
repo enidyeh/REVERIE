@@ -108,7 +108,7 @@ describe('票据编号与活动', () => {
     expect(tickets).toHaveLength(3)
     expect(tickets.map((ticket) => ticket.index)).toEqual([1, 2, 3])
     expect(tickets.map((ticket) => activityOrder(ticket.activityId))).toEqual(['01', '02', '03'])
-    expect(ticketActivity(tickets[0])?.name.length).toBeGreaterThan(0)
+    expect(ticketActivity(tickets[0])?.name.zh.length).toBeGreaterThan(0)
   })
 
   it('追加买票从已有最大票号之后继续，不覆盖已有票', () => {

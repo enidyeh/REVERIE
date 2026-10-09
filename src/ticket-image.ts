@@ -1,5 +1,8 @@
 import { themeEntryDate, themeVenue } from './data/theme'
 import { activityOrder, ticketActivity, ticketNumber, type TicketRecord } from './tickets'
+import { pick } from './i18n/localize'
+import { ticketImageCopy as copy } from './i18n/tickets'
+import type { Locale } from './i18n/messages'
 
 // 把票面画成一张 PNG：纯本地 canvas 绘制，不请求任何服务，也不生成真实可用凭证。
 const width = 900
@@ -7,15 +10,17 @@ const height = 620
 const mono = '"SFMono-Regular", ui-monospace, Menlo, monospace'
 const sans = '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif'
 
+// 英文名称比中文更长，逐级缩小直到放进列宽（英文场地名与活动名最长）。
 function fitText(ctx: CanvasRenderingContext2D, value: string, maxWidth: number, size: number) {
-  ctx.font = `500 ${size}px ${sans}`
-  if (ctx.measureText(value).width <= maxWidth) return
-  ctx.font = `500 ${size - 5}px ${sans}`
-  if (ctx.measureText(value).width <= maxWidth) return
-  ctx.font = `500 ${size - 10}px ${sans}`
+  let current = size
+  ctx.font = `500 ${current}px ${sans}`
+  while (ctx.measureText(value).width > maxWidth && current > 15) {
+    current -= 3
+    ctx.font = `500 ${current}px ${sans}`
+  }
 }
 
-function drawQrPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+function drawQrPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, label: string) {
   const cell = size / 9
   ctx.fillStyle = '#081627'
   ctx.fillRect(x, y, size, size)
@@ -35,12 +40,12 @@ function drawQrPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.fillStyle = '#a89bff'
   ctx.font = `16px ${mono}`
   ctx.textAlign = 'center'
-  ctx.fillText('QR 占位', x + size / 2, y + size / 2 + 6)
+  ctx.fillText(label, x + size / 2, y + size / 2 + 6)
   ctx.textAlign = 'left'
 }
 
 // 返回是否真的生成了图片；调用方根据结果给出演示提示。
-export function downloadTicketImage(ticket: TicketRecord): Promise<boolean> {
+export function downloadTicketImage(ticket: TicketRecord, locale: Locale): Promise<boolean> {
   const activity = ticketActivity(ticket)
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -63,7 +68,7 @@ export function downloadTicketImage(ticket: TicketRecord): Promise<boolean> {
   ctx.fillStyle = 'rgba(255, 47, 164, .45)'
   ctx.font = `90px ${sans}`
   ctx.textAlign = 'right'
-  ctx.fillText('夢', width - 40, 178)
+  ctx.fillText(pick(locale, copy.seal), width - 40, 178)
   ctx.textAlign = 'left'
   ctx.restore()
 
@@ -78,11 +83,11 @@ export function downloadTicketImage(ticket: TicketRecord): Promise<boolean> {
   ctx.restore()
 
   const rows: [string, string][] = [
-    ['票号｜TICKET NO.', `第 ${ticketNumber(ticket.index)} 张票 · ${ticket.id}`],
-    ['活动｜EVENT', activity ? `活动 ${activityOrder(ticket.activityId)} · ${activity.name} / ${activity.nameEn}` : '待项目方补充'],
-    ['活动时间｜TIME', activity ? `${activity.day} ${activity.time} · ${activity.kind}` : '待项目方补充'],
-    ['活动地点｜VENUE', `SHANGHAI · ${themeVenue}`],
-    ['票期｜ENTRY DATE', themeEntryDate],
+    [pick(locale, copy.labelNo), pick(locale, copy.ticketNo)(ticketNumber(ticket.index), ticket.id)],
+    [pick(locale, copy.labelEvent), activity ? pick(locale, copy.event)(activityOrder(ticket.activityId), pick(locale, activity.name)) : pick(locale, copy.pending)],
+    [pick(locale, copy.labelTime), activity ? pick(locale, copy.time)(activity.day, activity.time, pick(locale, activity.kind)) : pick(locale, copy.pending)],
+    [pick(locale, copy.labelVenue), pick(locale, copy.venue)(pick(locale, themeVenue))],
+    [pick(locale, copy.labelDate), themeEntryDate],
   ]
   let y = 150
   rows.forEach(([label, value]) => {
@@ -95,7 +100,7 @@ export function downloadTicketImage(ticket: TicketRecord): Promise<boolean> {
     y += 78
   })
 
-  drawQrPlaceholder(ctx, 662, 190, 180)
+  drawQrPlaceholder(ctx, 662, 190, 180, pick(locale, copy.qrPlaceholder))
 
   ctx.save()
   ctx.strokeStyle = 'rgba(243, 235, 221, .28)'
@@ -109,8 +114,9 @@ export function downloadTicketImage(ticket: TicketRecord): Promise<boolean> {
   ctx.fillStyle = '#7c8b93'
   ctx.font = `18px ${mono}`
   ctx.fillText('UNSEEN® / CITY PASSPORT', 40, 566)
-  ctx.fillText('DEMO TICKET · 不可入场', width - 40 - ctx.measureText('DEMO TICKET · 不可入场').width, 566)
-  ctx.fillText('演示票：不产生订单或扣款，二维码为占位，不能用于入场。', 40, 596)
+  const demoNotValid = pick(locale, copy.demoNotValid)
+  ctx.fillText(demoNotValid, width - 40 - ctx.measureText(demoNotValid).width, 566)
+  ctx.fillText(pick(locale, copy.demoNote), 40, 596)
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {

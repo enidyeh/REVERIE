@@ -6,18 +6,21 @@
 
 1. **两个独立版本，不混排**：不采用「每段中文下面跟一段英文」的写法；同一页只出现一种语言的正文。
 2. **英文版不出现任何中文**（专有名词除外：`REVERIE`、`UNSEEN BOX`、`REVERIE SHOP`、`REALMVIEW`、`SHANGHAI` 等）。
-3. **中文版保持现有的编辑感混排**（等宽英文眉题 + 中文正文，例如 `EDITOR'S PICKS / 演示活动`）。
-4. **切换入口**：页头中间、国家城市选择器右侧的语言图标（🌐 + 当前语言），点开为小面板选择 `中文 / English`；选择立即生效并保存在本机（`unseen:locale:v1`），`<html lang>` 同步为 `zh-CN` / `en`。
+3. **中文版页面内的眉题与子标签一律中文**（2026-10-09 修订，取代此前「中文版保留英文眉题混排」的说法）：纯英文眉题（`FEATURED` / `WHAT'S INSIDE` / `EVENT SCHEDULE` / `DIRECTORY` / `DREAM ARCHETYPE` 等）删除或改写为中文，双语标签只留中文（`入梦日期` / `入梦坐标` / `着装建议` / `现场布景风格` / `梦境原型`）。**保留英文的只有品牌与体系标识**：主导航 `DISCOVER / HOME / IDENTITY / COLLABORATE / ABOUT`、字标 `REVERIE®` / `UNSEEN®`、`UNSEEN® / CITY PASSPORT`、页脚 `AS WE WANDER, WE BECOME.` / `UNSEEN® / SHANGHAI`，以及展位号、票号、`ISSUE 002` 这类编号与 `Cos` / `Lolita` / `BJD` / `Instagram` 这类品类专名。
+4. **切换入口**：页头中间、国家城市选择器右侧的语言图标（🌐 + 当前语言），点开为小面板选择 `中文 / English`；选择立即生效并保存在本机（`unseen:locale:v1`），`<html lang>` 同步为 `zh-CN` / `en`，页面 meta 同步按语言重写（静态 HTML 保留中文）。
 5. 内容按页面逐个确认后落地，未确认的页面在英文版下仍显示中文（阶段性状态，见文末进度表）。
 
 ## 技术实现
 
-- `src/i18n/messages.ts`：`Locale` / `Localized` 类型、`locales` 选项、`localeStorageKey`、`loadLocale()`。
+- `src/i18n/messages.ts`：`Locale` / `Localized<T>`（值可以是字符串或函数）、`locales` 选项、`localeStorageKey`、`loadLocale()`。
 - `src/i18n/context.ts`：`LocaleContext`。
-- `src/i18n/locale.tsx`：`LocaleProvider`（写入 localStorage、同步 `<html lang>`）。
-- `src/i18n/use-locale.ts`：`useLocale()`，返回 `{ locale, setLocale, t }`；`t({ zh, en })` 取当前语言的值。
-- `src/i18n/shell.ts`：外壳文案（导航 aria-label、MORE 菜单、国家城市选择器、语言选择器本身）。
-- 组件与数据按需改造为 `Localized`：中文版取 `zh`、英文版取 `en`；页面内容按页面分批迁移。
+- `src/i18n/locale.tsx`：`LocaleProvider`（写入 localStorage、同步 `<html lang>` 与页面 meta）。
+- `src/i18n/use-locale.ts`：`useLocale()`，返回 `{ locale, setLocale, t }`；`t({ zh, en })` 取当前语言，值可以是函数：`t({ zh: (n) => `${n} 张票`, en: (n) => … })(2)`。
+- `src/i18n/localize.ts`：`pick(locale, value)` 与 `localizeDeep(value, locale)`；`use-localized.ts` 的 `useLocalized(数据模块)` 在渲染前把数据里的 `{ zh, en }` 叶子解析成单语树（数据模块保持单一数据源）。
+- `src/i18n/format.ts`：`plural(count, one, many)` 等量词工具（中文无复数变化，英文按单复数取词）。
+- `src/i18n/meta.ts`：页面级 meta 文案与 `applySiteMeta`。
+- 文案模块：`shell.ts`（外壳）、`discover.ts`（DISCOVER 页与购票弹层）、`tickets.ts`（票据图片 canvas）。
+- 自动化防线：`src/i18n/i18n.test.ts` 断言每个 `{ zh, en }` 每侧要么有内容要么明确为 `null`、且**英文侧不出现任何中文**。
 
 ## 术语表（待项目方逐条确认）
 
@@ -97,15 +100,14 @@
 
 | 范围 | 状态 | 说明 |
 | --- | --- | --- |
-| 外壳（页头 / 主导航 / 手机底栏 / MORE 菜单 / 国家城市选择器 / 语言选择器） | ✅ 已双语并验证 | E51 |
-| DISCOVER（月度主题页） | ⬜ 待确认英文稿 | 内容最多（主题、活动表、目录、测试、任务、商店入口） |
-| HOME 页头与五个栏目标签 | ⬜ 待确认 | 页头大标题「在现场，遇见更多。」等 |
+| 外壳（页头 / 主导航 / 手机底栏 / MORE 菜单 / 国家城市选择器 / 语言选择器 / 社交标志 / 页面 meta） | ✅ 已双语并验证 | E51–E52 |
+| DISCOVER（月度主题页 + 购票弹层 + 票据图片 canvas） | ✅ 已双语并验证 | E52：英文版整页 0 个中文字符 |
+| HOME 英雄区（「在现场，遇见更多。」） | ⬜ 待确认 | App.tsx 内联 |
 | HOME › EXPLORE | ⬜ 待确认 | 偏好筛选、三条计划、四处栏目引导 |
-| HOME › CONTENT | ⬜ 待确认 | 标题、四个形式、九条专题 |
+| HOME › CONTENT | ⬜ 待确认 | 已临时接入 `t()` 以保持编译，文案未双语化 |
 | HOME › EVENTS | ⬜ 待确认 | 定位说明、形式标签、四个活动、小队 |
 | HOME › SHOP | ⬜ 待确认 | 说明、八个商品、购物袋与下单流程 |
 | HOME › SPACE | ⬜ 待确认 | 三个空间、预约流程 |
-| IDENTITY | ⬜ 待确认 | 护照、徽章、记录表单、票据夹 |
+| IDENTITY | ⬜ 待确认 | 护照、徽章、记录表单、票据夹（已临时接入 `pick()`） |
 | COLLABORATE | ⬜ 待确认 | 定位、招募、身份选择、报名表单 |
 | ABOUT | ⬜ 待确认 | 一句话定义、四个品牌、数据、联系方式 |
-| 票据图片（canvas 绘制） | ⬜ 待确认 | 票面文字需要英文版 |
