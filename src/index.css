@@ -21,12 +21,12 @@
   --title-sm: 18px;
   --title-sm-leading: 1.5;
 
-  /* 正文：所有正文、标注、按钮、元数据统一用这一个字号 */
-  --text-md: 13px;
-  --text-md-leading: 1.85;
-  --text-sm: 13px;
-  --text-sm-leading: 1.8;
-  --text-xs: 13px;
+  /* 正文：桌面端统一放大两号（13 → 15px），标注与控件文字同档 */
+  --text-md: 15px;
+  --text-md-leading: 1.8;
+  --text-sm: 15px;
+  --text-sm-leading: 1.75;
+  --text-xs: 15px;
   --text-xs-leading: 1.7;
 
   /* 色彩：参考项目方提供的第一版 NEURO GROWTH 视觉（深海军蓝底 + 酸黄主色 + 紫强调）。
@@ -53,12 +53,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 移动端沿用同一套字号，只把标题缩小；正文保持 13px 便于看清楚 */
+/* 移动端：标题缩小；正文（段落、说明、按钮文字）保持 13px 不变，只有最小档（编号 / 日期 / 标签等标注）缩到 12px */
 @media (max-width: 760px) {
   :root {
     --title-lg: 30px;
     --title-md: 22px;
     --title-sm: 16px;
+    --text-md: 13px;
+    --text-md-leading: 1.85;
+    --text-sm: 13px;
+    --text-sm-leading: 1.8;
+    --text-xs: 12px;
+    --text-xs-leading: 1.65;
   }
 }
 
