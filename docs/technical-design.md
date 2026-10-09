@@ -20,6 +20,7 @@ src/
   CollaborateView.tsx    COLLABORATE（合作与报名）
   AboutView.tsx          ABOUT（品牌与联系）
   components/            可复用的界面组件
+  i18n/                  语言状态与双语文案（messages / context / locale / use-locale / shell）
   data/                  类型化的演示数据与主题内容
   unseen.css             应用壳与全局布局（基础层见 index.css）
   surfaces.css           全站圆角 / 投影 / 触控目标规范（在 main.tsx 最后引入）
@@ -56,6 +57,14 @@ src/
 - 票据跨页面共享：`src/tickets.ts` 统一管理 `TicketRecord`（`id` / `index` / `activityId`）与本地存储键 `unseen:tickets:v1`，DISCOVER 的 `BookingFlow` 在付款那一刻写入，IDENTITY 的 `TicketVault`（`src/components/TicketVault.tsx`）读取并支持取消票据。票与活动的对应关系由 `buildTickets()` 按 `themeSchedule` 顺序分配，不随机。票据不包含昵称、手机号或支付信息；入场时间与场地以 `themeEntryDate` / `themeVenue` 为唯一来源，避免多处硬编码。下载票据图片由 `src/ticket-image.ts` 用 canvas 在本地生成，不发网络请求。
 - 「下载票据图片」由 `src/ticket-image.ts` 用 canvas 本地绘制（无第三方依赖、不发请求），返回是否真的生成成功，由调用方给出提示；下载图本身标注「演示票 · 不可入场」。二维码在正式方案确定前只呈现占位图形，不生成可扫描码。
 - 避免 `any`、不必要的全局状态库和过早的服务层。
+
+## 国际化（中英双版本）
+
+- 语言状态：`Locale = 'zh' | 'en'`，保存在 `localStorage` 的 `unseen:locale:v1`，由 `src/i18n/locale.tsx` 的 `LocaleProvider` 写入并同步 `<html lang>`；组件通过 `src/i18n/use-locale.ts` 的 `useLocale()` 取 `{ locale, setLocale, t }`。
+- 取值方式：双语文案写成 `{ zh, en }`（`Localized`），组件用 `t(value)` 取当前语言；**不使用「中文段落下跟英文段落」的写法**，英文版不出现中文（专有名词除外）。
+- 文件划分：`messages.ts`（类型与常量）、`context.ts`（Context）、`locale.tsx`（只导出 Provider）、`use-locale.ts`（只导出 hook）、`shell.ts`（外壳文案）——拆分是为了满足 `react-refresh/only-export-components`。
+- 入口控件：`src/components/LanguagePicker.tsx`（样式 `language-picker.css`）放在页头 `.header-selects` 内、国家城市选择器右侧，交互与 `LocationPicker` 一致（弹层 + Esc / 背板关闭 + 焦点交还）。窄屏（≤760px）时两个选择器只显示图标，保留 44px 触控尺寸与 `aria-label`。
+- 进度与术语：见 `docs/i18n-glossary.md`（含术语表与逐页状态）。当前已完成外壳，页面内容待逐页确认后迁移。
 
 ## 质量要求
 

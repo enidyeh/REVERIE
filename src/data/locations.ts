@@ -213,18 +213,18 @@ export const countries: Country[] = [
   },
 ]
 
-export type SelectedLocation = { city: string; cityEn: string; country: string; countryCode: string }
+export type SelectedLocation = { city: string; cityEn: string; country: string; countryEn: string; countryCode: string }
 
 export const defaultLocationId = 'cn-shanghai'
 
 export function resolveLocation(cityId: string): SelectedLocation {
   for (const country of countries) {
     const city = country.cities.find((entry) => entry.id === cityId)
-    if (city) return { city: city.zh, cityEn: city.en, country: country.zh, countryCode: country.code }
+    if (city) return { city: city.zh, cityEn: city.en, country: country.zh, countryEn: country.en, countryCode: country.code }
   }
   const fallbackCountry = countries[0]
   const fallbackCity = fallbackCountry.cities[0]
-  return { city: fallbackCity.zh, cityEn: fallbackCity.en, country: fallbackCountry.zh, countryCode: fallbackCountry.code }
+  return { city: fallbackCity.zh, cityEn: fallbackCity.en, country: fallbackCountry.zh, countryEn: fallbackCountry.en, countryCode: fallbackCountry.code }
 }
 
 export function locationLabel(location: SelectedLocation) {

@@ -5,7 +5,9 @@
 
 .app-shell { min-height: 100vh; width: 100%; margin: 0 auto; max-width: 1440px; padding: 0 56px 34px; }
 /* 粘顶时向外补出外壳的内边距，让背景与分隔线横跨整宽；不用 backdrop-filter，避免它影响定位后代。 */
-.app-header { position: sticky; top: 0; z-index: 9; height: var(--app-header-h); margin: 0 -56px; padding: 0 56px; background: var(--ink); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule); }
+.app-header { position: sticky; top: 0; z-index: 9; height: var(--app-header-h); margin: 0 -56px; padding: 0 56px; background: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--rule); }
+/* 页头中间的两个选择器（国家城市 + 语言）成组放在一起。 */
+.header-selects { display: flex; align-items: center; gap: 4px; margin: 0 auto; }
 .wordmark { color: var(--text); text-decoration: none; font-size: var(--title-md); line-height: 1.2; font-weight: 700; letter-spacing: 0; }
 .wordmark span { color: var(--accent); font: var(--text-sm)/var(--text-sm-leading) var(--mono); vertical-align: top; margin-left: 3px; }
 .header-location svg { color: var(--accent); }
@@ -78,6 +80,9 @@
   .wordmark { font-size: var(--title-md); }
   .avatar-button { display: none; }
   .main-nav { display: none; }
+  /* 窄屏页头空间紧：两个选择器只留图标，保留 44px 触控尺寸与 aria-label。 */
+  .header-selects .location-trigger > span,
+  .header-selects .language-trigger > span { display: none; }
   .page-content { min-height: calc(100svh - 138px); padding: 26px 0 48px; }
   .explore-heading, .home-heading { display: block; padding: 32px 0 22px; }
   .heading-aside { margin: 14px 0 0; }

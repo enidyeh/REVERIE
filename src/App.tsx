@@ -21,8 +21,11 @@ import MonthlyThemeView from './MonthlyThemeView'
 import CollaborateView from './CollaborateView'
 import AboutView from './AboutView'
 import LocationPicker from './components/LocationPicker'
+import { LanguagePicker } from './components/LanguagePicker'
 import { MoreMenu, type MoreTarget } from './components/MoreMenu'
 import { SocialMarks } from './components/SocialMarks'
+import { useLocale } from './i18n/use-locale'
+import { shell } from './i18n/shell'
 import type { Experience } from './data/discover'
 import './unseen.css'
 
@@ -54,6 +57,7 @@ const secondaryNavigation: NavItem[] = [
 ]
 
 function App() {
+  const { t } = useLocale()
   const [section, setSection] = useState<Section>('discover')
   const [homeSection, setHomeSection] = useState<HomeSection>('explore')
   const [identityDraft, setIdentityDraft] = useState<IdentityDraft | null>(null)
@@ -81,15 +85,18 @@ function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <a className="wordmark" href="#top" onClick={() => setSection('discover')} aria-label="REVERIE 首页">REVERIE<span>®</span></a>
-        <LocationPicker onSelect={() => { setSection('home'); setHomeSection('explore') }} />
-        <button className="avatar-button" type="button" onClick={() => setSection('identity')} aria-label="打开个人档案">E<span>01</span></button>
-        <button className="header-more" type="button" ref={moreButtonRef} onClick={() => setMoreOpen(true)} aria-label="打开更多入口" aria-haspopup="dialog" aria-expanded={moreOpen}>
+        <a className="wordmark" href="#top" onClick={() => setSection('discover')} aria-label={t(shell.home)}>REVERIE<span>®</span></a>
+        <div className="header-selects">
+          <LocationPicker onSelect={() => { setSection('home'); setHomeSection('explore') }} />
+          <LanguagePicker />
+        </div>
+        <button className="avatar-button" type="button" onClick={() => setSection('identity')} aria-label={t(shell.profile)}>E<span>01</span></button>
+        <button className="header-more" type="button" ref={moreButtonRef} onClick={() => setMoreOpen(true)} aria-label={t(shell.more)} aria-haspopup="dialog" aria-expanded={moreOpen}>
           MORE<ArrowUpRight size={14} aria-hidden="true" />
         </button>
       </header>
 
-      <nav className="main-nav" aria-label="主导航">
+        <nav className="main-nav" aria-label={t(shell.mainNav)}>
         {[primaryNavigation, secondaryNavigation].map((group, groupIndex) => (
           <Fragment key={groupIndex === 0 ? 'primary' : 'secondary'}>
             <div className={`main-nav-group ${groupIndex === 1 ? 'main-nav-group-end' : ''}`}>
@@ -172,7 +179,7 @@ function App() {
       </main>
 
       <footer className="app-footer"><span>AS WE WANDER, WE BECOME.</span><span>UNSEEN® / SHANGHAI</span></footer>
-      <nav className="mobile-nav" aria-label="移动端主导航">
+      <nav className="mobile-nav" aria-label={t(shell.mobileNav)}>
         {primaryNavigation.map(({ id, label, icon: Icon }) => (
           <button className={section === id ? 'is-active' : ''} key={id} type="button" aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}>
             <Icon size={19} strokeWidth={1.7} aria-hidden="true" /><span>{label}</span>

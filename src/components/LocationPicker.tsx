@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown, MapPin, Search, X } from 'lucide-react'
 import { countries, defaultLocationId, locationLabel, resolveLocation, type SelectedLocation } from '../data/locations'
+import { useLocale } from '../i18n/use-locale'
+import { locationPickerCopy as copy } from '../i18n/shell'
 import './location-picker.css'
 
 const storageKey = 'unseen:location:v1'
@@ -16,6 +18,7 @@ function loadCityId() {
 }
 
 function LocationPicker({ onSelect }: { onSelect?: () => void }) {
+  const { locale, t } = useLocale()
   const [cityId, setCityId] = useState(loadCityId)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -77,13 +80,13 @@ function LocationPicker({ onSelect }: { onSelect?: () => void }) {
         ref={triggerRef}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={t(copy.triggerLabel)}
         onClick={togglePicker}
       >
         <MapPin size={13} aria-hidden="true" />
         <span>{locationLabel(location)}</span>
         <ChevronDown size={12} aria-hidden="true" />
       </button>
-
       {open && (
         <div className="location-overlay" role="presentation" onClick={() => { setOpen(false); triggerRef.current?.focus() }}>
           <section
@@ -95,10 +98,10 @@ function LocationPicker({ onSelect }: { onSelect?: () => void }) {
           >
             <header className="location-panel-head">
               <div>
-                <p className="location-panel-eyebrow">SELECT REGION / 选择国家地区</p>
-                <h2 id="location-panel-title">你要从哪里开始？</h2>
+                <p className="location-panel-eyebrow">{t(copy.eyebrow)}</p>
+                <h2 id="location-panel-title">{t(copy.title)}</h2>
               </div>
-              <button className="location-close" type="button" onClick={() => { setOpen(false); triggerRef.current?.focus() }} aria-label="关闭地点选择">
+              <button className="location-close" type="button" onClick={() => { setOpen(false); triggerRef.current?.focus() }} aria-label={t(copy.close)}>
                 <X size={17} aria-hidden="true" />
               </button>
             </header>
@@ -110,18 +113,20 @@ function LocationPicker({ onSelect }: { onSelect?: () => void }) {
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="搜索国家或城市"
-                aria-label="搜索国家或城市"
+                placeholder={t(copy.searchPlaceholder)}
+                aria-label={t(copy.searchLabel)}
               />
             </div>
 
-            <p className="location-current">当前：{location.city} · {location.country}</p>
+            <p className="location-current">
+              {t(copy.current)}{locale === 'en' ? `${location.cityEn} · ${location.countryEn}` : `${location.city} · ${location.country}`}
+            </p>
 
             <div className="location-scroll" role="list">
               {groups.map((country) => (
                 <div className="location-group" key={country.id}>
                   <p className="location-group-head">
-                    <span>{country.zh}</span>
+                    {locale === 'en' ? <span>{country.en}</span> : <span>{country.zh}</span>}
                     <b>{country.en} / {country.code}</b>
                   </p>
                   <ul>
@@ -136,8 +141,8 @@ function LocationPicker({ onSelect }: { onSelect?: () => void }) {
                             aria-current={selected ? 'true' : undefined}
                             onClick={() => choose(city.id)}
                           >
-                            <span className="location-city-zh">{city.zh}</span>
-                            <span className="location-city-en">{city.en}</span>
+                            <span className="location-city-zh">{locale === 'en' ? city.en : city.zh}</span>
+                            {locale === 'zh' && <span className="location-city-en">{city.en}</span>}
                             {selected && <Check size={14} aria-hidden="true" />}
                           </button>
                         </li>
@@ -146,10 +151,10 @@ function LocationPicker({ onSelect }: { onSelect?: () => void }) {
                   </ul>
                 </div>
               ))}
-              {!groups.length && <p className="location-empty">没有匹配的国家或城市。</p>}
+              {!groups.length && <p className="location-empty">{t(copy.empty)}</p>}
             </div>
 
-            <p className="location-note">当前只有上海的演示内容；其他城市的体验、活动、商品与空间尚未上线。国家与城市列表为演示数据。</p>
+            <p className="location-note">{t(copy.note)}</p>
           </section>
         </div>
       )}
