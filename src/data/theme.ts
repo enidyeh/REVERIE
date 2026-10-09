@@ -569,3 +569,88 @@ export const themeCreators: ThemeCreator[] = [
     },
   },
 ]
+
+// ---------------------------------------------------------------------------
+// 活动（主题）打包：DISCOVER 页用左右按钮在各场活动之间切换，视图只读取当前活动这一份数据。
+// 上面所有导出都是「梦游仙境」的内容，是当前唯一的真实数据源。
+// 「游园惊梦」的项目方资料尚未提供：先整体复制「梦游仙境」的内容占位（只改活动名、期号与 H1 断行），
+// 并标记 placeholder，页面会显示一句占位说明。资料到齐后替换包内数据、去掉 placeholder 即可。
+// ---------------------------------------------------------------------------
+
+export type ThemeTicket = typeof themeTicket
+
+export type ThemePack = {
+  id: string
+  meta: typeof themeMeta
+  /** 入场时间以项目方原文为准，购票流程与票据都用它。 */
+  entryDate: string
+  venue: Localized
+  ticket: ThemeTicket
+  duality: typeof themeDuality
+  rituals: ThemeRitual[]
+  scheduleDays: readonly string[]
+  schedule: ThemeActivity[]
+  scheduleNote: Localized
+  quiz: ThemeQuizQuestion[]
+  results: typeof themeResults
+  challenge: typeof themeChallenge
+  featured: typeof themeFeatured
+  mapPlan: typeof themeMapPlan
+  mapGroups: ThemeMapGroup[]
+  brands: ThemeBrand[]
+  creators: ThemeCreator[]
+  shopCta: typeof themeShopCta
+  /** 内容仍是复制占位，等待项目方资料；为 true 时页面显示占位说明。 */
+  placeholder?: boolean
+}
+
+const wonderlandPack: ThemePack = {
+  id: 'wonderland',
+  meta: themeMeta,
+  entryDate: themeEntryDate,
+  venue: themeVenue,
+  ticket: themeTicket,
+  duality: themeDuality,
+  rituals: themeRituals,
+  scheduleDays: themeScheduleDays,
+  schedule: themeSchedule,
+  scheduleNote: themeScheduleNote,
+  quiz: themeQuiz,
+  results: themeResults,
+  challenge: themeChallenge,
+  featured: themeFeatured,
+  mapPlan: themeMapPlan,
+  mapGroups: themeMapGroups,
+  brands: themeBrands,
+  creators: themeCreators,
+  shopCta: themeShopCta,
+}
+
+// 游园惊梦的占位身份信息：英文名待项目方确认，暂用 A DREAM IN THE GARDEN。
+const gardenMeta: typeof themeMeta = {
+  ...themeMeta,
+  series: { zh: '异想集 REVERIE｜游园惊梦', en: 'REVERIE｜A DREAM IN THE GARDEN' },
+  title: { zh: '游园惊梦', en: 'A DREAM IN THE GARDEN' },
+  titleLines: { zh: ['游 园', '惊 梦'], en: ['A DREAM IN THE GARDEN'] },
+  issue: 'ISSUE 003',
+}
+
+export const themePacks: ThemePack[] = [
+  wonderlandPack,
+  {
+    ...wonderlandPack,
+    id: 'garden',
+    meta: gardenMeta,
+    // 票种名不能沿用「梦游入场券」（那是另一场活动的名字），占位阶段改用中性的「入场券」。
+    ticket: { ...themeTicket, name: { zh: '入场券', en: 'ENTRY TICKET' } },
+    placeholder: true,
+  },
+]
+
+/** 所有活动里的活动条目，按 id 去重：票夹与票号按它解析。 */
+export const allThemeActivities: ThemeActivity[] = [...new Map(themePacks.flatMap((pack) => pack.schedule).map((activity) => [activity.id, activity])).values()]
+
+/** 按活动条目 id 找回它所属的活动（票面渲染用）。 */
+export function themePackOfActivity(activityId: string): ThemePack | undefined {
+  return themePacks.find((pack) => pack.schedule.some((activity) => activity.id === activityId))
+}

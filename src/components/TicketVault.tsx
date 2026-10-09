@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Check, Download, MoreHorizontal, Ticket, X } from 'lucide-react'
-import { themeEntryDate, themeVenue } from '../data/theme'
+import { themePackOfActivity, themePacks } from '../data/theme'
 import { activityOrder, ticketActivity, ticketNumber, type TicketRecord } from '../tickets'
 import { downloadTicketImage } from '../ticket-image'
 import { useLocale } from '../i18n/use-locale'
@@ -27,6 +27,8 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const opened = tickets.find((ticket) => ticket.id === openId) ?? null
   const openedActivity = opened ? ticketActivity(opened) : undefined
+  // 票面身份跟随这张票所属的活动（场地、入场日期、活动名与期号）。
+  const openedPack = opened ? themePackOfActivity(opened.activityId) ?? themePacks[0] : themePacks[0]
 
   useEffect(() => {
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -130,16 +132,16 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
             </div>
             <div className="vault-ticket">
               <div className="vault-ticket-top">
-                <span>REVERIE WONDERLAND</span>
-                <span>ISSUE 002</span>
+                <span>{t(openedPack.meta.title)}</span>
+                <span>{openedPack.meta.issue}</span>
               </div>
               <p className="vault-ticket-mark" aria-hidden="true">{t(imageCopy.seal)}</p>
               <dl className="vault-ticket-body">
                 <div><dt>{t(imageCopy.labelNo)}</dt><dd>{t(copy.ticketNo)(ticketNumber(opened.index))}<span>{opened.id}</span></dd></div>
                 <div><dt>{t(imageCopy.labelEvent)}</dt><dd>{t(copy.sessionNo)(activityOrder(opened.activityId), t(openedActivity.name))}<span>{t(openedActivity.kind)}</span></dd></div>
                 <div><dt>{t(imageCopy.labelTime)}</dt><dd>{openedActivity.day} {openedActivity.time}</dd></div>
-                <div><dt>{t(imageCopy.labelVenue)}</dt><dd>{t(copy.venueLine)(t(themeVenue))}</dd></div>
-                <div><dt>{t(imageCopy.labelDate)}</dt><dd>{themeEntryDate}</dd></div>
+                <div><dt>{t(imageCopy.labelVenue)}</dt><dd>{t(copy.venueLine)(t(openedPack.venue))}</dd></div>
+                <div><dt>{t(imageCopy.labelDate)}</dt><dd>{openedPack.entryDate}</dd></div>
               </dl>
               <div className="ticket-qr">
                 <div className="ticket-qr-box" role="img" aria-label={t(copy.qrAria)}><span>{t(imageCopy.qrPlaceholder)}</span></div>

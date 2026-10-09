@@ -1,4 +1,4 @@
-import { themeEntryDate, themeVenue } from './data/theme'
+import { themePackOfActivity, themePacks } from './data/theme'
 import { activityOrder, ticketActivity, ticketNumber, type TicketRecord } from './tickets'
 import { pick } from './i18n/localize'
 import { ticketImageCopy as copy } from './i18n/tickets'
@@ -47,6 +47,8 @@ function drawQrPlaceholder(ctx: CanvasRenderingContext2D, x: number, y: number, 
 // 返回是否真的生成了图片；调用方根据结果给出演示提示。
 export function downloadTicketImage(ticket: TicketRecord, locale: Locale): Promise<boolean> {
   const activity = ticketActivity(ticket)
+  // 票面身份跟随票据所属的活动，不写死第一个活动。
+  const pack = themePackOfActivity(ticket.activityId) ?? themePacks[0]
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
@@ -62,8 +64,9 @@ export function downloadTicketImage(ticket: TicketRecord, locale: Locale): Promi
   // 顶部信息行与「夢」印章
   ctx.fillStyle = '#b9c6ce'
   ctx.font = `20px ${mono}`
-  ctx.fillText('REVERIE WONDERLAND', 40, 62)
-  ctx.fillText('ISSUE 002', width - 40 - ctx.measureText('ISSUE 002').width, 62)
+  ctx.fillText(pick(locale, pack.meta.title), 40, 62)
+  const issue = pack.meta.issue
+  ctx.fillText(issue, width - 40 - ctx.measureText(issue).width, 62)
   ctx.save()
   ctx.fillStyle = 'rgba(255, 47, 164, .45)'
   ctx.font = `90px ${sans}`
@@ -86,8 +89,8 @@ export function downloadTicketImage(ticket: TicketRecord, locale: Locale): Promi
     [pick(locale, copy.labelNo), pick(locale, copy.ticketNo)(ticketNumber(ticket.index), ticket.id)],
     [pick(locale, copy.labelEvent), activity ? pick(locale, copy.event)(activityOrder(ticket.activityId), pick(locale, activity.name)) : pick(locale, copy.pending)],
     [pick(locale, copy.labelTime), activity ? pick(locale, copy.time)(activity.day, activity.time, pick(locale, activity.kind)) : pick(locale, copy.pending)],
-    [pick(locale, copy.labelVenue), pick(locale, copy.venue)(pick(locale, themeVenue))],
-    [pick(locale, copy.labelDate), themeEntryDate],
+    [pick(locale, copy.labelVenue), pick(locale, copy.venue)(pick(locale, pack.venue))],
+    [pick(locale, copy.labelDate), pack.entryDate],
   ]
   let y = 150
   rows.forEach(([label, value]) => {

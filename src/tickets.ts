@@ -1,4 +1,4 @@
-import { themeSchedule } from './data/theme'
+import { allThemeActivities } from './data/theme'
 
 // 票据记录：只在本地保存「票号 / 对应活动」，不包含昵称、手机号或任何支付信息。
 // 付款那一刻就写库，因此没有额外的「确认保存」状态。
@@ -15,12 +15,12 @@ export function ticketNumber(index: number) {
 }
 
 export function ticketActivity(ticket: TicketRecord) {
-  return themeSchedule.find((activity) => activity.id === ticket.activityId)
+  return allThemeActivities.find((activity) => activity.id === ticket.activityId)
 }
 
 // 活动编号（01 / 02 / …）按当天活动表里的顺序确定。
 export function activityOrder(activityId: string) {
-  const position = themeSchedule.findIndex((activity) => activity.id === activityId)
+  const position = allThemeActivities.findIndex((activity) => activity.id === activityId)
   return String(position + 1).padStart(2, '0')
 }
 
@@ -34,7 +34,7 @@ export function loadTickets(): TicketRecord[] {
         const record = item as Record<string, unknown>
         const activityId = typeof record.activityId === 'string' ? record.activityId : ''
         const index = typeof record.index === 'number' && Number.isInteger(record.index) && record.index > 0 ? record.index : 0
-        if (index === 0 || !themeSchedule.some((activity) => activity.id === activityId)) return []
+        if (index === 0 || !allThemeActivities.some((activity) => activity.id === activityId)) return []
         return [{ id: `RV-002-${ticketNumber(index)}`, index, activityId }]
       })
       .sort((a, b) => a.index - b.index)
@@ -56,7 +56,7 @@ export function buildTickets(count: number, existing: TicketRecord[]): TicketRec
   const start = existing.reduce((max, ticket) => Math.max(max, ticket.index), 0) + 1
   return Array.from({ length: count }, (_, offset) => {
     const index = start + offset
-    const activity = themeSchedule[(index - 1) % themeSchedule.length]
+    const activity = allThemeActivities[(index - 1) % allThemeActivities.length]
     return { id: `RV-002-${ticketNumber(index)}`, index, activityId: activity.id }
   })
 }

@@ -100,6 +100,25 @@ export const themeCopy = {
     statusDone: { zh: 'RABBIT HOLE STAMP 已获取', en: 'RABBIT HOLE STAMP earned' } as Localized,
   },
 
+  // 页面顶部的活动切换：左右两个按钮在各场活动之间切换。
+  issueSwitch: {
+    groupLabel: { zh: '切换活动', en: 'Switch activity' } as Localized,
+    prev: { zh: '上一个活动', en: 'Previous activity' } as Localized,
+    next: { zh: '下一个活动', en: 'Next activity' } as Localized,
+    position: {
+      zh: (index: number, total: number) => `第 ${index} / ${total} 个活动`,
+      en: (index: number, total: number) => `Activity ${index} of ${total}`,
+    } as Localized<(index: number, total: number) => string>,
+    switched: {
+      zh: (title: string) => `已切换到「${title}」`,
+      en: (title: string) => `Switched to “${title}”`,
+    } as Localized<(title: string) => string>,
+    placeholder: {
+      zh: '演示：「游园惊梦」的活动资料尚未提供，本页内容暂为「梦游仙境」的复制占位，等主题资料确认后替换。',
+      en: 'Demo: the material for A DREAM IN THE GARDEN has not been provided yet, so this page currently shows a copy of IN THE WONDERLAND, to be replaced once the theme material is confirmed.',
+    } as Localized,
+  },
+
   footerLine: {
     zh: '发现主题 → 测试我是谁 → 接受一个小任务 → 发现上海的梦境 → 认识创作者和物件 → 10.31 真正进入 REVERIE 梦境。',
     en: "Find the theme → take the quiz → accept a small task → find Shanghai's dream → meet the creators and objects → step into REVERIE on 10.31.",

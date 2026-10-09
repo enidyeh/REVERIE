@@ -1,22 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowUpRight, Check, RefreshCw, Sparkles, Ticket } from 'lucide-react'
-import {
-  themeBrands,
-  themeChallenge,
-  themeCreators,
-  themeDuality,
-  themeFeatured,
-  themeMapGroups,
-  themeMapPlan,
-  themeShopCta,
-  themeMeta,
-  themeQuiz,
-  themeResults,
-  themeRituals,
-  themeSchedule,
-  themeScheduleDays,
-  themeScheduleNote,
-} from './data/theme'
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, RefreshCw, Sparkles, Ticket } from 'lucide-react'
+import { themePacks, type ThemePack } from './data/theme'
 import { BookingFlow } from './components/BookingFlow'
 import { themeAnnouncements, themeCopy as copy } from './i18n/discover'
 import { useLocale } from './i18n/use-locale'
@@ -34,24 +18,6 @@ const themeTabs: { id: TabId; index: string }[] = [
   { id: 'quiz', index: '03' },
 ]
 
-// 数据模块保持单一数据源，这里按当前语言解析一次，视图里拿到的都是单语值。
-const themeContent = {
-  meta: themeMeta,
-  duality: themeDuality,
-  rituals: themeRituals,
-  schedule: themeSchedule,
-  scheduleNote: themeScheduleNote,
-  quiz: themeQuiz,
-  results: themeResults,
-  challenge: themeChallenge,
-  featured: themeFeatured,
-  mapPlan: themeMapPlan,
-  mapGroups: themeMapGroups,
-  brands: themeBrands,
-  creators: themeCreators,
-  shopCta: themeShopCta,
-}
-
 type QuizPicks = Record<string, string[]>
 
 type ThemeState = {
@@ -63,6 +29,9 @@ type ThemeState = {
   bookedActivities: string[]
   dreamerName: string
 }
+
+// 活跃活动与每个活动各自的互动记录一起存在本机：切换活动不会弄丢另一场活动的答题、预约与昵称。
+type ThemeStore = { issueId: string; states: Record<string, ThemeState> }
 
 const emptyState: ThemeState = {
   quizPicks: {},
@@ -78,39 +47,60 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function loadThemeState(): ThemeState {
-  try {
-    const saved: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null')
-    if (!isRecord(saved)) return emptyState
+function themePackById(id: string): ThemePack {
+  return themePacks.find((pack) => pack.id === id) ?? themePacks[0]
+}
 
-    const quizPicks: QuizPicks = {}
-    if (isRecord(saved.quizPicks)) {
-      for (const question of themeQuiz) {
-        const picked = saved.quizPicks[question.id]
-        if (!Array.isArray(picked)) continue
-        const optionIds = new Set(question.options.map((option) => option.id))
-        quizPicks[question.id] = picked.filter((id): id is string => typeof id === 'string' && optionIds.has(id))
-      }
-    }
+// 单个活动的互动记录：逐项校验，任何一项不合法都退回空状态。
+function parseThemeState(saved: unknown, pack: ThemePack): ThemeState {
+  if (!isRecord(saved)) return emptyState
 
-    return {
-      quizPicks,
-      quizLocked: saved.quizLocked === true,
-      challengeAccepted: saved.challengeAccepted === true,
-      challengeDone: saved.challengeDone === true,
-      exampleIndex: typeof saved.exampleIndex === 'number' && Number.isInteger(saved.exampleIndex) && saved.exampleIndex >= 0 && saved.exampleIndex < themeChallenge.examples.zh.length ? saved.exampleIndex : 0,
-      bookedActivities: Array.isArray(saved.bookedActivities) ? saved.bookedActivities.filter((id): id is string => typeof id === 'string' && themeSchedule.some((activity) => activity.id === id)) : [],
-      dreamerName: typeof saved.dreamerName === 'string' && saved.dreamerName.trim() ? saved.dreamerName.slice(0, 18) : emptyState.dreamerName,
+  const quizPicks: QuizPicks = {}
+  if (isRecord(saved.quizPicks)) {
+    for (const question of pack.quiz) {
+      const picked = saved.quizPicks[question.id]
+      if (!Array.isArray(picked)) continue
+      const optionIds = new Set(question.options.map((option) => option.id))
+      quizPicks[question.id] = picked.filter((id): id is string => typeof id === 'string' && optionIds.has(id))
     }
-  } catch {
-    return emptyState
+  }
+
+  return {
+    quizPicks,
+    quizLocked: saved.quizLocked === true,
+    challengeAccepted: saved.challengeAccepted === true,
+    challengeDone: saved.challengeDone === true,
+    exampleIndex: typeof saved.exampleIndex === 'number' && Number.isInteger(saved.exampleIndex) && saved.exampleIndex >= 0 && saved.exampleIndex < pack.challenge.examples.zh.length ? saved.exampleIndex : 0,
+    bookedActivities: Array.isArray(saved.bookedActivities) ? saved.bookedActivities.filter((id): id is string => typeof id === 'string' && pack.schedule.some((activity) => activity.id === id)) : [],
+    dreamerName: typeof saved.dreamerName === 'string' && saved.dreamerName.trim() ? saved.dreamerName.slice(0, 18) : emptyState.dreamerName,
   }
 }
 
-function resolveResult(picks: QuizPicks) {
+function loadThemeStore(): ThemeStore {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null')
+    if (!isRecord(saved)) return { issueId: themePacks[0].id, states: {} }
+
+    // 旧版存储里直接是一份互动记录，没有活动维度：归到第一个活动名下。
+    if (!isRecord(saved.states)) {
+      return { issueId: themePacks[0].id, states: { [themePacks[0].id]: parseThemeState(saved, themePacks[0]) } }
+    }
+
+    const issueId = typeof saved.issueId === 'string' ? themePackById(saved.issueId).id : themePacks[0].id
+    const states: Record<string, ThemeState> = {}
+    for (const pack of themePacks) {
+      if (pack.id in saved.states) states[pack.id] = parseThemeState(saved.states[pack.id], pack)
+    }
+    return { issueId, states }
+  } catch {
+    return { issueId: themePacks[0].id, states: {} }
+  }
+}
+
+function resolveResult(picks: QuizPicks, pack: ThemePack) {
   let fantasy = 0
   let flip = 0
-  for (const question of themeQuiz) {
+  for (const question of pack.quiz) {
     const selected = new Set(picks[question.id] ?? [])
     for (const option of question.options) {
       if (!selected.has(option.id)) continue
@@ -138,8 +128,22 @@ function topBarHeight() {
 
 function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpenShop: () => void; onOpenTickets: () => void; onOpenContent: () => void }) {
   const { t } = useLocale()
-  const theme = useLocalized(themeContent)
-  const [state, setState] = useState<ThemeState>(() => loadThemeState())
+  // 当前活动，以及每个活动各自的互动记录（答题、预约、昵称互不影响）。
+  const [store, setStore] = useState<ThemeStore>(() => loadThemeStore())
+  const issueIndex = Math.max(themePacks.findIndex((item) => item.id === store.issueId), 0)
+  const pack = themePacks[issueIndex]
+  const state = store.states[pack.id] ?? emptyState
+  // 所有 setState 调用只改「当前活动」那一份记录，调用处与单活动版保持一致。
+  const setState = (update: ThemeState | ((current: ThemeState) => ThemeState)) => {
+    setStore((current) => {
+      const active = themePackById(current.issueId)
+      const previous = current.states[active.id] ?? emptyState
+      const next = typeof update === 'function' ? update(previous) : update
+      return { ...current, states: { ...current.states, [active.id]: next } }
+    })
+  }
+  // 数据模块保持单一数据源，这里按当前语言解析一次，视图里拿到的都是单语值。
+  const theme = useLocalized(pack)
   const [announcement, setAnnouncement] = useState('')
   // 购票弹层：登录 → 付款 → 得到票，均为本地演示。
   const [bookingOpen, setBookingOpen] = useState(false)
@@ -148,7 +152,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
   // 梦境地图的两个入口只是界面状态，不写入本地存储。
   const [mapGroup, setMapGroup] = useState<MapGroupId>('brands')
   // 当天活动表：默认看第一天。
-  const [scheduleDay, setScheduleDay] = useState<string>(themeScheduleDays[0])
+  const [scheduleDay, setScheduleDay] = useState<string>(pack.scheduleDays[0])
   // 本期特别推荐的轮播：当前张与是否暂停（悬停 / 聚焦时暂停）。
   const [featuredIndex, setFeaturedIndex] = useState(0)
   const [featuredPaused, setFeaturedPaused] = useState(false)
@@ -168,11 +172,11 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
 
   useEffect(() => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(state))
+      localStorage.setItem(storageKey, JSON.stringify(store))
     } catch {
       // 本地存储不可用时静默跳过，页面仍可继续操作。
     }
-  }, [state])
+  }, [store])
 
   // 点击「看我的梦境结果」后，等兔子洞任务里的结果渲染完再滚过去。
   useEffect(() => {
@@ -214,18 +218,33 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
     observer.observe(node)
     const timer = window.setInterval(() => {
       if (!visible) return
-      setFeaturedIndex((current) => (current + 1) % themeFeatured.items.length)
+      setFeaturedIndex((current) => (current + 1) % theme.featured.items.length)
     }, 4500)
     return () => {
       observer.disconnect()
       window.clearInterval(timer)
     }
-  }, [featuredPaused])
+  }, [featuredPaused, theme.featured.items.length])
 
-  const answered = themeQuiz.filter((question) => (state.quizPicks[question.id] ?? []).length > 0).length
-  const resolved = resolveResult(state.quizPicks)
+  const answered = theme.quiz.filter((question) => (state.quizPicks[question.id] ?? []).length > 0).length
+  const resolved = resolveResult(state.quizPicks, pack)
   const outcome = resolved.outcome === 'fantasy' ? theme.results.fantasy : theme.results.flip
   const dayActivities = theme.schedule.filter((activity) => activity.day === scheduleDay)
+
+  // 左右按钮切换活动：回到页首并重置只在页面内生效的状态，另一场活动的互动记录保留。
+  function switchIssue(direction: 1 | -1) {
+    const nextIndex = (issueIndex + direction + themePacks.length) % themePacks.length
+    const next = themePacks[nextIndex]
+    setStore((current) => ({ ...current, issueId: next.id }))
+    setScheduleDay(next.scheduleDays[0])
+    setFeaturedIndex(0)
+    setActiveTab('events')
+    setBookingOpen(false)
+    setPublishOpen(false)
+    pendingScrollRef.current = null
+    window.scrollTo({ top: 0, behavior: 'auto' })
+    setAnnouncement(t(copy.issueSwitch.switched)(t(next.meta.title)))
+  }
 
   function toggleOption(questionId: string, optionId: string) {
     setState((current) => {
@@ -238,6 +257,18 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
 
   return (
     <div className="theme-page">
+      <div className="theme-issue-nav" role="group" aria-label={t(copy.issueSwitch.groupLabel)}>
+        <span className="theme-issue-position">{t(copy.issueSwitch.position)(issueIndex + 1, themePacks.length)}</span>
+        <div className="theme-issue-buttons">
+          <button className="theme-issue-button" type="button" onClick={() => switchIssue(-1)} aria-label={t(copy.issueSwitch.prev)} title={t(copy.issueSwitch.prev)}>
+            <ChevronLeft size={18} aria-hidden="true" />
+          </button>
+          <button className="theme-issue-button" type="button" onClick={() => switchIssue(1)} aria-label={t(copy.issueSwitch.next)} title={t(copy.issueSwitch.next)}>
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
       <section className="theme-hero" aria-labelledby="theme-title">
         <img className="theme-hero-image" src={theme.meta.heroImage} alt={theme.meta.heroImageAlt} />
         <div className="theme-hero-shade" aria-hidden="true" />
@@ -268,6 +299,8 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           <p className="theme-hero-line">{theme.meta.heroLine}</p>
         </div>
       </section>
+
+      {pack.placeholder && <p className="theme-issue-placeholder">{t(copy.issueSwitch.placeholder)}</p>}
 
       <nav className="theme-tabs" ref={tabsRef} aria-label={t(copy.tabsNav)}>
         <div className="theme-tabs-inner">
@@ -354,7 +387,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           <span>{t(copy.schedule.count)(dayActivities.length)}</span>
         </div>
         <div className="theme-schedule-days" role="group" aria-label={t(copy.schedule.dayGroupLabel)}>
-          {themeScheduleDays.map((day) => (
+          {theme.scheduleDays.map((day) => (
             <button
               className={`theme-day-tab ${scheduleDay === day ? 'is-active' : ''}`}
               key={day}
@@ -455,8 +488,8 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
             <img
               alt=""
               aria-hidden="true"
-              key={themeFeatured.items[featuredIndex].id}
-              src={themeFeatured.items[featuredIndex].image}
+              key={theme.featured.items[featuredIndex].id}
+              src={theme.featured.items[featuredIndex].image}
             />
             <figcaption>
               <b>{theme.featured.items[featuredIndex].label}</b>
@@ -544,7 +577,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
             {t(copy.quiz.eyebrow) && <p className="theme-eyebrow">{t(copy.quiz.eyebrow)}</p>}
             <h2 id="theme-quiz-heading">{t(copy.quiz.heading)}</h2>
           </div>
-          <span>{t(copy.quiz.answered)(answered, themeQuiz.length)}</span>
+          <span>{t(copy.quiz.answered)(answered, theme.quiz.length)}</span>
         </div>
         <div className="theme-quiz-list">
           {theme.quiz.map((question) => (
@@ -573,7 +606,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           <button
             className="theme-primary-action"
             type="button"
-            disabled={answered < themeQuiz.length}
+            disabled={answered < theme.quiz.length}
             onClick={() => {
               pendingScrollRef.current = challengeRef.current
               setState((current) => ({ ...current, quizLocked: true }))
@@ -718,6 +751,12 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           onOpenTickets={onOpenTickets}
           dreamerName={state.dreamerName}
           onDreamerNameChange={(value) => setState((current) => ({ ...current, dreamerName: value }))}
+          ticket={pack.ticket}
+          venue={pack.venue}
+          entryDate={pack.entryDate}
+          city={pack.meta.city}
+          title={pack.meta.title}
+          issue={pack.meta.issue}
         />
       )}
     </div>

@@ -42,7 +42,7 @@ src/
 - 初始原型可使用 React 状态完成页面切换；当浏览器前进/后退或可链接页面成为真实需求时，再评估路由库。
 - 演示数据与交互状态分离。数据集中在 `src/data/`，组件不散落复制业务内容。
 - 需要跨刷新保留的状态通过有版本前缀的 localStorage 键保存，并对读取值做解析、类型和异常处理；存储不可用时允许本次会话继续使用内存状态。
-- 当前键：`unseen:discover:v1`（EXPLORE 已选计划与三条「问题 → 小实验」的完成勾选 `planDone`；`experimentProgress` 已随小实验区块删除，旧数据读取时忽略）、`unseen:discover-preferences:v1`（共享偏好：兴趣方向 / 可用时长 / 出行方式；单次预算已删除，旧数据里的该字段读取时直接忽略）、`unseen:events:v1`、`unseen:market:v1`、`unseen:space:v1`、`unseen:identity:v1`、`unseen:theme:v1`（三道测试题的答案与锁定状态、24H 任务状态与当前任务示例序号、已预约的活动 id、梦游者昵称，昵称默认为空）、`unseen:location:v1`（顶部选择的国家城市，仅存城市 id）、`unseen:tickets:v1`（票据，仅存票号 / 对应活动）。主题页的滚动高亮板块、名录入口、当前轮播、活动表日期与购票步骤都只是界面状态，不写入存储（刷新后回到默认）。手机号字段有意不进入该键：它只存在 `BookingFlow` 组件内存中，关闭弹层或刷新即清空。
+- 当前键：`unseen:discover:v1`（EXPLORE 已选计划与三条「问题 → 小实验」的完成勾选 `planDone`；`experimentProgress` 已随小实验区块删除，旧数据读取时忽略）、`unseen:discover-preferences:v1`（共享偏好：兴趣方向 / 可用时长 / 出行方式；单次预算已删除，旧数据里的该字段读取时直接忽略）、`unseen:events:v1`、`unseen:market:v1`、`unseen:space:v1`、`unseen:identity:v1`、`unseen:theme:v1`（结构为 `{ issueId, states }`：`issueId` 是当前活动，`states` 按活动 id 各存一份互动记录——三道测试题的答案与锁定状态、24H 任务状态与当前任务示例序号、已预约的活动 id、梦游者昵称，昵称默认为空；旧版「直接存一份记录」的数据读取时归到第一个活动名下）、`unseen:location:v1`（顶部选择的国家城市，仅存城市 id）、`unseen:tickets:v1`（票据，仅存票号 / 对应活动）。主题页的滚动高亮板块、名录入口、当前轮播、活动表日期与购票步骤都只是界面状态，不写入存储（刷新后回到默认）。手机号字段有意不进入该键：它只存在 `BookingFlow` 组件内存中，关闭弹层或刷新即清空。
 - 关于主题页中真实场馆、品牌与价格：这些内容由项目方提供，仅作编辑推荐展示，界面上必须同时标明演示属性与“价格以官方渠道为准”，并且不实现购票、售卖、预约或报名。外部链接使用 `target="_blank"` 与 `rel="noreferrer noopener"`。
 - localStorage 仅保存演示进度、队伍意向、购物袋、空间预约意向、主题页交互状态和用户主动输入的非敏感文字。不要持久化手机号、认证凭据或秘密。
 - 为本地状态提供清晰的重置/恢复演示入口，避免过期数据使验收不可重复。
@@ -54,7 +54,7 @@ src/
 - “AI 建议”使用确定性的预设模板或规则数据，不发送用户输入到外部服务。
 - 将模拟交易和预约封装为本地交互；不实现支付、库存扣减、票务或网络请求。
 - 购票演示的票种、价格与限购集中在 `src/data/theme.ts` 的 `themeTicket`（`梦游入场券`、`¥29.9 / 张`、1–10 张、演示说明），组件不硬编码价格；票数不写入存储，关闭弹层即回到默认 1 张。
-- 票据跨页面共享：`src/tickets.ts` 统一管理 `TicketRecord`（`id` / `index` / `activityId`）与本地存储键 `unseen:tickets:v1`，DISCOVER 的 `BookingFlow` 在付款那一刻写入，IDENTITY 的 `TicketVault`（`src/components/TicketVault.tsx`）读取并支持取消票据。票与活动的对应关系由 `buildTickets()` 按 `themeSchedule` 顺序分配，不随机。票据不包含昵称、手机号或支付信息；入场时间与场地以 `themeEntryDate` / `themeVenue` 为唯一来源，避免多处硬编码。下载票据图片由 `src/ticket-image.ts` 用 canvas 在本地生成，不发网络请求。
+- 票据跨页面共享：`src/tickets.ts` 统一管理 `TicketRecord`（`id` / `index` / `activityId`）与本地存储键 `unseen:tickets:v1`，DISCOVER 的 `BookingFlow` 在付款那一刻写入，IDENTITY 的 `TicketVault`（`src/components/TicketVault.tsx`）读取并支持取消票据。票与活动的对应关系由 `buildTickets()` 按 `allThemeActivities`（所有活动的活动条目按 id 去重）顺序分配，不随机。票据不包含昵称、手机号或支付信息；入场时间与场地以当前活动的 `entryDate` / `venue` 为唯一来源（由 `MonthlyThemeView` 通过 props 传进 `BookingFlow`），避免多处硬编码。下载票据图片由 `src/ticket-image.ts` 用 canvas 在本地生成，不发网络请求。
 - 「下载票据图片」由 `src/ticket-image.ts` 用 canvas 本地绘制（无第三方依赖、不发请求），返回是否真的生成成功，由调用方给出提示；下载图本身标注「演示票 · 不可入场」。二维码在正式方案确定前只呈现占位图形，不生成可扫描码。
 - 避免 `any`、不必要的全局状态库和过早的服务层。
 
@@ -63,10 +63,11 @@ src/
 - 语言状态：`Locale = 'zh' | 'en'`，保存在 `localStorage` 的 `unseen:locale:v1`，由 `src/i18n/locale.tsx` 的 `LocaleProvider` 写入并同步 `<html lang>`；组件通过 `src/i18n/use-locale.ts` 的 `useLocale()` 取 `{ locale, setLocale, t }`。
 - 取值方式：双语文案写成 `{ zh, en }`（`Localized<T>`，值可以是字符串，也可以是带参数的函数，例如 `{ zh: (n) => `${n} 张票`, en: (n) => `${n} ${plural(n, 'ticket', 'tickets')}` }`）。视图用 `t(value)` 取当前语言；**不使用「中文段落下跟英文段落」的写法**。中文版页面内的眉题与子标签一律中文（纯英文眉题写成 `zh: null`，渲染时跳过），只有品牌标识与主导航保留英文；英文版不出现中文。
 - 数据层：数据模块（`src/data/*.ts`）的显示字段就地改写成 `{ zh, en }`，用 `useLocalized(数据模块)`（内部调 `localizeDeep`）在渲染前按当前语言解析一次，得到单语数据树；id、序号、展位号、价格、外链等标识保持普通字符串。视图里的字面量统一収到 `src/i18n/*.ts` 文案模块，不在 JSX 里写双语字面。
-- 文件划分：`messages.ts`（类型与常量）、`context.ts`（Context）、`locale.tsx`（只导出 Provider）、`use-locale.ts`（只导出 hook）、`use-localized.ts`（解析 hook）、`localize.ts`（`pick` / `localizeDeep`）、`format.ts`（单复数等格式化）、`meta.ts`（页面 meta 按语言重写）；文案：`shell.ts`（外壳）、`home.ts`（HOME 英雄区与五个子栏目标签）、`discover.ts`（DISCOVER 与购票弹层）、`explore.ts`（EXPLORE 与偏好选项）、`content.ts`（CONTENT）、`events.ts`（EVENTS）、`identity.ts`（IDENTITY）、`market.ts`（SHOP）、`space.ts`（SPACE）、`tickets.ts`（票据图片 canvas 与票夹）——拆分是为了满足 `react-refresh/only-export-components`。
+- 多活动（主题）：`src/data/theme.ts` 把一份活动内容打包为 `ThemePack`（meta、购票信息、排期、名录、测试与任务等），`themePacks` 列出全部活动，`allThemeActivities` 是按 id 去重的活动条目。DISCOVER 只读当前活动那一份，并用 `useLocalized(pack)` 解析；新增活动只需再添一份 pack，不改视图。当前第二个 pack（`garden`，游园惊梦）是「梦游仙境」的复制占位（`placeholder: true`，页面显示占位说明），项目方资料到位后替换包内数据并去掉该标记。
+- 文件划分：`messages.ts`（类型与常量）、`context.ts`（Context）、`locale.tsx`（只导出 Provider）、`use-locale.ts`（只导出 hook）、`use-localized.ts`（解析 hook）、`localize.ts`（`pick` / `localizeDeep`）、`format.ts`（单复数等格式化）、`meta.ts`（页面 meta 按语言重写）；文案：`shell.ts`（外壳）、`home.ts`（HOME 英雄区与五个子栏目标签）、`discover.ts`（DISCOVER、购票弹层与活动切换）、`explore.ts`（EXPLORE 与偏好选项）、`content.ts`（CONTENT）、`events.ts`（EVENTS）、`identity.ts`（IDENTITY）、`market.ts`（SHOP）、`space.ts`（SPACE）、`tickets.ts`（票据图片 canvas 与票夹）、`collaborate.ts`（COLLABORATE）、`about.ts`（ABOUT）——拆分是为了满足 `react-refresh/only-export-components`。
 - 入口控件：`src/components/LanguagePicker.tsx`（样式 `language-picker.css`）放在页头 `.header-selects` 内、国家城市选择器右侧，交互与 `LocationPicker` 一致（弹层 + Esc / 背板关闭 + 焦点交还）。窄屏（≤760px）时两个选择器只显示图标，保留 44px 触控尺寸与 `aria-label`。
 - 静态 meta：`index.html` 保留中文（爬虫读到的是中文），浏览器内切换语言时由 `LocaleProvider` 调 `meta.ts` 的 `applySiteMeta` 重写 `description` / `og:description` / `twitter:description` / `og:locale`；标题与 `og:title` 用品牌标语，两版一致。
-- 进度与术语：见 `docs/i18n-glossary.md`（含规则、术语表与逐页状态）。已完成：外壳 + DISCOVER + HOME 五个栏目 + IDENTITY（含票据夹）。待做：COLLABORATE、ABOUT。
+- 进度与术语：见 `docs/i18n-glossary.md`（含规则、术语表与逐页状态）。已完成：外壳 + DISCOVER（含活动切换）+ HOME 五个栏目 + IDENTITY（含票据夹）+ COLLABORATE + ABOUT，即全站已双语。
 - 本地档案的语言边界：示例档案双语（`DemoArchiveEntry`，渲染前用 `useLocalized` 解析）；用户写入的档案存单语字符串（`ArchiveEntry`），写入时按当前语言生成默认地点与分类，**之后切换语言不再翻译用户内容**。预设反思（`createReflection`）按语言判断：中文按关键词 + 100 字，英文按关键词 + 40 词。
 - 依赖中文文字的排序已清理：EXPLORE 的专题排序（`topicAffinity`）改用专题 id 匹配（`contentTopics.items` 带 `id`），不再因翻译失效。
 - 自动化防线：`src/i18n/i18n.test.ts` 遍历数据与文案模块，断言每个 `{ zh, en }` 每侧要么有内容要么明确为 `null`（不得是空字符串、不得两侧都空），且**英文侧不出现任何中文**；`localizeDeep` 有单独用例。
