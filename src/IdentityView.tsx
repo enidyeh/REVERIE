@@ -6,8 +6,10 @@ import { demoArchiveEntries, identityBadges, identityProfile, type ArchiveEntry 
 import { youthSpaces } from './data/spaces'
 import { loadTickets, persistTickets, type TicketRecord } from './tickets'
 import { TicketVault } from './components/TicketVault'
-import { pick } from './i18n/localize'
+import { identityCopy as copy } from './i18n/identity'
 import { useLocale } from './i18n/use-locale'
+import { useLocalized } from './i18n/use-localized'
+import type { Locale } from './i18n/messages'
 import './identity.css'
 
 const storageKey = 'unseen:identity:v1'
@@ -57,7 +59,7 @@ function loadJoinedTeams() {
     const joinedIds = new Set(saved.filter((id): id is string => typeof id === 'string'))
     return cityEvents.flatMap((event) => event.teams
       .filter((team) => joinedIds.has(team.id))
-      .map((team) => ({ eventTitle: event.title, teamName: team.name, eventDate: event.date })))
+      .map((team) => ({ id: team.id, eventTitle: event.title, teamName: team.name, eventDate: event.date })))
   } catch {
     return []
   }
@@ -97,10 +99,21 @@ function localDate() {
   return `${year}-${month}-${day}`
 }
 
-function createReflection(note: string) {
-  if (/[人朋友同行聊]/.test(note)) return '这次体验里，连接也成为了值得带走的一部分。下次可以记下你们共同注意到的一个细节。'
-  if (note.length > 100) return '你留下的不只是结果，还有观察过程。下次可以沿着这个细节，继续探索一点点。'
-  return '从一个具体细节开始，就已经是一次出发。下次可以试着多留十分钟，看看还会遇见什么。'
+// 预设反思：中文按关键词与字数判断，英文按关键词与词数判断（英文没有中文字符可用）。
+const reflectionKeywords: Record<Locale, RegExp> = {
+  zh: /[人朋友同行聊]/,
+  en: /\b(friend|friends|people|together|talk|talked|chatted|met|company|someone|others)\b/i,
+}
+
+const reflectionWordLimit = 40
+const reflectionCharLimit = 100
+
+function createReflection(note: string, locale: Locale, t: <T>(value: { zh: T; en: T }) => T) {
+  const connected = reflectionKeywords[locale].test(note)
+  const long = locale === 'en' ? note.trim().split(/\s+/).length > reflectionWordLimit : note.length > reflectionCharLimit
+  if (connected) return t(copy.reflectionConnected)
+  if (long) return t(copy.reflectionObservant)
+  return t(copy.reflectionStart)
 }
 
 function IdentityView({
@@ -121,7 +134,9 @@ function IdentityView({
   onTicketsRequestedConsumed?: () => void
 }) {
   const [userEntries, setUserEntries] = useState<ArchiveEntry[]>(loadUserEntries)
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
+  // 示例档案是双语的，按当前语言解析一次；用户自己写的记录永远是写入时的语言。
+  const demoEntries = useLocalized(demoArchiveEntries)
   const [joinedTeams] = useState(loadJoinedTeams)
   const [plannedExperiences] = useState(loadPlannedExperiences)
   const [spaceVisitIntents] = useState(loadSpaceVisitIntents)
@@ -146,7 +161,7 @@ function IdentityView({
     }
   }, [userEntries])
 
-  const timeline = [...demoArchiveEntries, ...userEntries].sort((a, b) => b.date.localeCompare(a.date))
+  const timeline: ArchiveEntry[] = [...demoEntries, ...userEntries].sort((a, b) => b.date.localeCompare(a.date))
   const yearEntries = timeline.filter((entry) => entry.date.startsWith(identityProfile.year))
   const filteredTimeline = yearEntries.filter((entry) => {
     if (sourceFilter !== 'all' && entry.source !== sourceFilter) return false
@@ -166,26 +181,26 @@ function IdentityView({
       setUserEntries((current) => current.map((entry) => entry.id === editingEntryId ? {
         ...entry,
         title: trimmedTitle.slice(0, 60),
-        location: location.trim().slice(0, 50) || '上海',
+        location: location.trim().slice(0, 50) || t(copy.defaultLocation),
         note: trimmedNote.slice(0, 600),
-        reflection: createReflection(trimmedNote),
+        reflection: createReflection(trimmedNote, locale, t),
       } : entry))
-      setAnnouncement('个人记录已更新')
+      setAnnouncement(t(copy.announceUpdated))
     } else {
       if (userEntries.length >= maximumEntries) return
       const entry: ArchiveEntry = {
         id: `identity-${Date.now()}`,
         date: localDate(),
         title: trimmedTitle.slice(0, 60),
-        location: location.trim().slice(0, 50) || '上海',
-        category: experienceDraft?.category ?? 'MY FIELD NOTE / 个人记录',
+        location: location.trim().slice(0, 50) || t(copy.defaultLocation),
+        category: experienceDraft?.category ?? t(copy.defaultCategory),
         note: trimmedNote.slice(0, 600),
-        reflection: createReflection(trimmedNote),
+        reflection: createReflection(trimmedNote, locale, t),
         source: 'user',
         ...(experienceDraft ? { relatedExperienceId: experienceDraft.id } : {}),
       }
       setUserEntries((current) => [entry, ...current].slice(0, maximumEntries))
-      setAnnouncement('这段经历已加入你的演示档案')
+      setAnnouncement(t(copy.announceAdded))
     }
 
     setEditingEntryId(null)
@@ -214,7 +229,7 @@ function IdentityView({
   function removeEntry(id: string) {
     setUserEntries((current) => current.filter((entry) => entry.id !== id))
     if (editingEntryId === id) cancelEdit()
-    setAnnouncement('这条个人记录已从本地档案移除')
+    setAnnouncement(t(copy.announceRemoved))
   }
 
   // 取消票据：只从本机票夹移除这张演示票，不涉及退款或任何订单。
@@ -224,46 +239,46 @@ function IdentityView({
       persistTickets(next)
       return next
     })
-    setAnnouncement('已取消这张演示票，已从票夹移除')
+    setAnnouncement(t(copy.announceTicketCancelled))
   }
 
   return (
     <div className="identity-page">
-      <div className="section-meta"><span>IDENTITY / PERSONAL ARCHIVE</span><span>YEARBOOK · {identityProfile.year}</span></div>
+      <div className="section-meta"><span>{t(copy.sectionMetaLeft)}</span><span>{t(copy.sectionMetaRight)(identityProfile.year)}</span></div>
       <header className="identity-cover">
         <div className="identity-cover-copy">
-          <p className="identity-eyebrow"><span className="identity-live-dot" /> CITY PASSPORT / SHANGHAI</p>
-          <h1>走过的地方，<br /><span>正在成为你。</span></h1>
-          <p className="identity-cover-line">一份关于真实出发的年度档案。</p>
+          <p className="identity-eyebrow"><span className="identity-live-dot" /> {t(copy.coverEyebrow)}</p>
+          <h1>{t(copy.coverTitleLines)[0]}<br /><span>{t(copy.coverTitleLines)[1]}</span></h1>
+          <p className="identity-cover-line">{t(copy.coverLine)}</p>
           <button className="identity-tickets-button" type="button" ref={ticketButtonRef} onClick={() => setTicketsOpen(true)}>
-            <Ticket size={15} aria-hidden="true" />我的票据
+            <Ticket size={15} aria-hidden="true" />{t(copy.ticketsButton)}
             <span className="identity-tickets-count">{tickets.length.toString().padStart(2, '0')}</span>
           </button>
-          <p className="identity-tickets-note">演示票据存在本机浏览器，不含手机号；票面二维码为占位，不可入场。</p>
+          <p className="identity-tickets-note">{t(copy.ticketsNote)}</p>
         </div>
         <div className="identity-passport-wrap">
           <div className="identity-passport">
             <div className="identity-passport-top"><span>UNSEEN® / CITY PASSPORT</span><span>SH · {identityProfile.year}</span></div>
             <div className="identity-passport-seal">U<span>.</span></div>
-            <div className="identity-passport-bottom"><div><span>HOLDER</span><strong>{identityProfile.alias}</strong></div><div><span>FIELD NOTES</span><strong>{yearEntries.length.toString().padStart(2, '0')}</strong></div></div>
+            <div className="identity-passport-bottom"><div><span>{t(copy.passportHolder)}</span><strong>{identityProfile.alias}</strong></div><div><span>{t(copy.passportFieldNotes)}</span><strong>{yearEntries.length.toString().padStart(2, '0')}</strong></div></div>
           </div>
-          <button className="identity-card-link" type="button" onClick={() => setAnnouncement('演示：实体卡的链接入口还没有接入，正式版会在这里打开实体卡页面。')}>
-            链接实体卡片 <ArrowUpRight size={13} aria-hidden="true" />
+          <button className="identity-card-link" type="button" onClick={() => setAnnouncement(t(copy.cardLinkNotice))}>
+            {t(copy.cardLink)} <ArrowUpRight size={13} aria-hidden="true" />
           </button>
         </div>
       </header>
 
-      <div className="identity-demo-note"><span>DEMO ARCHIVE</span> 示例身份、徽章和过往体验为虚构数据；你新增的个人记录只保存在本机浏览器。</div>
+      <div className="identity-demo-note"><span>{t(copy.demoToken)}</span> {t(copy.demoNote)}</div>
 
       <section className="identity-badges-section" aria-labelledby="identity-badges-heading">
-        <div className="identity-section-heading"><div><p className="identity-eyebrow">01 / YOUR PASSPORT</p><h2 id="identity-badges-heading">一路收下的小小证明。</h2></div><span>{identityBadges.length.toString().padStart(2, '0')} BADGES</span></div>
+        <div className="identity-section-heading"><div><p className="identity-eyebrow">{t(copy.badgesEyebrow)}</p><h2 id="identity-badges-heading">{t(copy.badgesHeading)}</h2></div><span>{t(copy.badgesCount)(identityBadges.length)}</span></div>
         <div className="identity-badges-grid">
           {identityBadges.map((badge) => (
             <article className="identity-badge" key={badge.id}>
               <span className="identity-badge-number">{badge.number}</span>
               <span className="identity-badge-mark"><BadgeCheck size={22} strokeWidth={1.4} /></span>
-              <h3>{badge.title}</h3>
-              <p>{badge.detail}</p>
+              <h3>{t(badge.title)}</h3>
+              <p>{t(badge.detail)}</p>
             </article>
           ))}
         </div>
@@ -271,100 +286,100 @@ function IdentityView({
 
       <div className="identity-profile-grid">
         <section className="identity-interests" aria-labelledby="identity-interests-heading">
-          <div className="identity-section-heading"><div><p className="identity-eyebrow">02 / WHAT MOVES YOU</p><h2 id="identity-interests-heading">最近在意的事。</h2></div></div>
-          <div className="identity-interest-list">{identityProfile.interests.map((interest, index) => <span key={interest}><b>0{index + 1}</b>{interest}</span>)}</div>
+          <div className="identity-section-heading"><div><p className="identity-eyebrow">{t(copy.interestsEyebrow)}</p><h2 id="identity-interests-heading">{t(copy.interestsHeading)}</h2></div></div>
+          <div className="identity-interest-list">{t(identityProfile.interests).map((interest, index) => <span key={interest}><b>0{index + 1}</b>{interest}</span>)}</div>
         </section>
 
         <section className="identity-connections" aria-labelledby="identity-connections-heading">
-          <div className="identity-section-heading"><div><p className="identity-eyebrow">03 / PEOPLE ALONG THE WAY</p><h2 id="identity-connections-heading">同行小队。</h2></div><span>{joinedTeams.length.toString().padStart(2, '0')}</span></div>
+          <div className="identity-section-heading"><div><p className="identity-eyebrow">{t(copy.connectionsEyebrow)}</p><h2 id="identity-connections-heading">{t(copy.connectionsHeading)}</h2></div><span>{joinedTeams.length.toString().padStart(2, '0')}</span></div>
           {joinedTeams.length ? (
             <div className="identity-connection-list">
               {joinedTeams.map((team) => (
-                <article className="identity-connection" key={`${team.eventTitle}-${team.teamName}`}>
+                <article className="identity-connection" key={team.id}>
                   <span className="identity-connection-mark"><UsersRound size={15} /></span>
-                  <div><strong>{pick(locale, team.teamName)}</strong><p>{pick(locale, team.eventTitle)}</p><span>{pick(locale, team.eventDate)} · 演示同行意向</span></div>
+                  <div><strong>{t(team.teamName)}</strong><p>{t(team.eventTitle)}</p><span>{t(team.eventDate)} · {t(copy.connectionIntent)}</span></div>
                 </article>
               ))}
             </div>
           ) : (
-            <div className="identity-connections-empty"><p>还没有加入同行小队。</p><button type="button" onClick={onFindEvents}>去活动里找同伴 <ArrowUpRight size={14} /></button></div>
+            <div className="identity-connections-empty"><p>{t(copy.connectionsEmpty)}</p><button type="button" onClick={onFindEvents}>{t(copy.findCompanions)} <ArrowUpRight size={14} /></button></div>
           )}
         </section>
       </div>
 
       <section className="identity-next-section" aria-labelledby="identity-next-heading">
-        <div className="identity-section-heading"><div><p className="identity-eyebrow">04 / STILL IN MOTION</p><h2 id="identity-next-heading">正在路上的事。</h2></div><span>{(plannedExperiences.length + joinedTeams.length + spaceVisitIntents.length).toString().padStart(2, '0')} PLANNED</span></div>
+        <div className="identity-section-heading"><div><p className="identity-eyebrow">{t(copy.nextEyebrow)}</p><h2 id="identity-next-heading">{t(copy.nextHeading)}</h2></div><span>{t(copy.nextCount)(plannedExperiences.length + joinedTeams.length + spaceVisitIntents.length)}</span></div>
         <div className="identity-next-grid">
           <section className="identity-next-group" aria-labelledby="identity-next-explore-heading">
-            <div><p className="identity-eyebrow">EXPLORE / 已选体验</p><h3 id="identity-next-explore-heading">下一次出发</h3></div>
+            <div><p className="identity-eyebrow">{t(copy.nextExploreEyebrow)}</p><h3 id="identity-next-explore-heading">{t(copy.nextExploreHeading)}</h3></div>
             {plannedExperiences.length ? plannedExperiences.map((experience, index) => (
               <article className="identity-next-item" key={experience.id}>
                 <span className="identity-next-index">{(index + 1).toString().padStart(2, '0')}</span>
-                <div><strong>{pick(locale, experience.title)}</strong><p>{pick(locale, experience.location)} · {pick(locale, experience.date)} · 计划中</p></div>
-                <button type="button" onClick={onFindExplore} aria-label="返回 EXPLORE 查看计划"><ArrowUpRight size={14} /></button>
+                <div><strong>{t(experience.title)}</strong><p>{t(experience.location)} · {t(experience.date)} · {t(copy.nextPlannedState)}</p></div>
+                <button type="button" onClick={onFindExplore} aria-label={t(copy.backToExploreAria)}><ArrowUpRight size={14} /></button>
               </article>
-            )) : <p className="identity-next-empty">还没有加入计划的体验。</p>}
+            )) : <p className="identity-next-empty">{t(copy.nextEmptyExplore)}</p>}
           </section>
 
           <section className="identity-next-group" aria-labelledby="identity-next-events-heading">
-            <div><p className="identity-eyebrow">EVENTS / 同行小队</p><h3 id="identity-next-events-heading">一起去现场</h3></div>
+            <div><p className="identity-eyebrow">{t(copy.nextEventsEyebrow)}</p><h3 id="identity-next-events-heading">{t(copy.nextEventsHeading)}</h3></div>
             {joinedTeams.length ? joinedTeams.map((team) => (
-              <article className="identity-next-item" key={`${team.eventTitle}-${team.teamName}`}>
+              <article className="identity-next-item" key={team.id}>
                 <span className="identity-next-index"><UsersRound size={14} /></span>
-                <div><strong>{pick(locale, team.teamName)}</strong><p>{pick(locale, team.eventTitle)} · {pick(locale, team.eventDate)} · 意向中</p></div>
-                <button type="button" onClick={onFindEvents} aria-label="返回 Events 查看小队"><ArrowUpRight size={14} /></button>
+                <div><strong>{t(team.teamName)}</strong><p>{t(team.eventTitle)} · {t(team.eventDate)} · {t(copy.nextIntentState)}</p></div>
+                <button type="button" onClick={onFindEvents} aria-label={t(copy.backToEventsAria)}><ArrowUpRight size={14} /></button>
               </article>
-            )) : <p className="identity-next-empty">还没有加入活动小队。</p>}
+            )) : <p className="identity-next-empty">{t(copy.nextEmptyEvents)}</p>}
           </section>
 
           <section className="identity-next-group" aria-labelledby="identity-next-space-heading">
-            <div><p className="identity-eyebrow">SPACE / 到访意向</p><h3 id="identity-next-space-heading">准备去看看</h3></div>
+            <div><p className="identity-eyebrow">{t(copy.nextSpaceEyebrow)}</p><h3 id="identity-next-space-heading">{t(copy.nextSpaceHeading)}</h3></div>
             {spaceVisitIntents.length ? spaceVisitIntents.map(({ space, slot }) => (
               <article className="identity-next-item" key={space.id}>
                 <span className="identity-next-index"><MapPin size={14} /></span>
-                <div><strong>{pick(locale, space.name)}</strong><p>{pick(locale, slot.label)} · {pick(locale, space.district)} · 意向中</p></div>
-                <button type="button" onClick={onFindSpace} aria-label="返回 Space 查看预约意向"><ArrowUpRight size={14} /></button>
+                <div><strong>{t(space.name)}</strong><p>{t(slot.label)} · {t(space.district)} · {t(copy.nextIntentState)}</p></div>
+                <button type="button" onClick={onFindSpace} aria-label={t(copy.backToSpaceAria)}><ArrowUpRight size={14} /></button>
               </article>
-            )) : <p className="identity-next-empty">还没有空间到访意向。</p>}
+            )) : <p className="identity-next-empty">{t(copy.nextEmptySpace)}</p>}
           </section>
         </div>
-        <p className="identity-next-disclosure">这些是尚未完成的本地演示意向，不属于已完成体验记录。</p>
+        <p className="identity-next-disclosure">{t(copy.nextDisclosure)}</p>
       </section>
 
       <section className="identity-record-section" aria-labelledby="identity-record-heading">
-        <div className="identity-section-heading"><div><p className="identity-eyebrow">05 / WRITE IT INTO YOUR YEAR</p><h2 id="identity-record-heading">给经历留一个位置。</h2></div><BookOpen size={18} /></div>
+        <div className="identity-section-heading"><div><p className="identity-eyebrow">{t(copy.recordEyebrow)}</p><h2 id="identity-record-heading">{t(copy.recordHeading)}</h2></div><BookOpen size={18} /></div>
         <div className="identity-record-layout">
           {experienceDraft && (
             <div className="identity-prefill-banner">
-              <div><span>FROM EXPLORE / 演示体验</span><strong>{experienceDraft.title}</strong><p>{experienceDraft.location}</p></div>
-              <button type="button" onClick={onExperienceDraftConsumed} aria-label="移除体验关联"><X size={16} /></button>
+              <div><span>{t(copy.prefillLabel)}</span><strong>{experienceDraft.title}</strong><p>{experienceDraft.location}</p></div>
+              <button type="button" onClick={onExperienceDraftConsumed} aria-label={t(copy.removeDraftAria)}><X size={16} /></button>
             </div>
           )}
           <form className="identity-record-form" onSubmit={addEntry}>
-            <label htmlFor="identity-entry-title">这次经历叫什么？<input id="identity-entry-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={60} placeholder="例如：在陌生街区散了一会儿步" required /></label>
-            <label htmlFor="identity-entry-location">在哪里发生？<input id="identity-entry-location" value={location} onChange={(event) => setLocation(event.target.value)} maxLength={50} placeholder="上海 · 某个街角" /></label>
-            <label htmlFor="identity-entry-note">你想记住什么？<textarea id="identity-entry-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={600} placeholder="写下一个细节、一段对话，或当时的心情……" rows={4} required /></label>
+            <label htmlFor="identity-entry-title">{t(copy.formTitle)}<input id="identity-entry-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={60} placeholder={t(copy.formTitlePlaceholder)} required /></label>
+            <label htmlFor="identity-entry-location">{t(copy.formLocation)}<input id="identity-entry-location" value={location} onChange={(event) => setLocation(event.target.value)} maxLength={50} placeholder={t(copy.formLocationPlaceholder)} /></label>
+            <label htmlFor="identity-entry-note">{t(copy.formNote)}<textarea id="identity-entry-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={600} placeholder={t(copy.formNotePlaceholder)} rows={4} required /></label>
             <div className="identity-record-form-bottom">
-              <span>{note.length}/600 · 纯文字</span>
+              <span>{t(copy.counter)(note.length, 600)}</span>
               <div>
-                {editingEntryId && <button className="identity-cancel-edit" type="button" onClick={cancelEdit}>取消</button>}
-                <button className="identity-save-entry" type="submit">{editingEntryId ? <><Check size={16} />保存修改</> : <><Plus size={16} />收进档案</>}</button>
+                {editingEntryId && <button className="identity-cancel-edit" type="button" onClick={cancelEdit}>{t(copy.cancelEdit)}</button>}
+                <button className="identity-save-entry" type="submit">{editingEntryId ? <><Check size={16} />{t(copy.saveEdit)}</> : <><Plus size={16} />{t(copy.addEntry)}</>}</button>
               </div>
             </div>
-            <p className="identity-reflection-disclosure">保存后会出现一条本地预设反思提示，不调用真实 AI。</p>
+            <p className="identity-reflection-disclosure">{t(copy.reflectionDisclosure)}</p>
           </form>
-          <aside className="identity-record-aside"><span className="identity-record-aside-mark">“</span><p>经历不必惊天动地，<br />被记住就有了形状。</p><span>FIELD NOTE / {identityProfile.city}</span></aside>
+          <aside className="identity-record-aside"><span className="identity-record-aside-mark">“</span><p>{t(copy.asideLines)[0]}<br />{t(copy.asideLines)[1]}</p><span>{t(copy.fieldNoteLabel)} / {t(identityProfile.city)}</span></aside>
         </div>
         <p className="identity-announcement" aria-live="polite">{announcement}</p>
       </section>
 
       <section className="identity-timeline-section" aria-labelledby="identity-timeline-heading">
-        <div className="identity-section-heading"><div><p className="identity-eyebrow">06 / {identityProfile.year} EXPERIENCE ARCHIVE</p><h2 id="identity-timeline-heading">这一年，正在展开。</h2></div><span>{yearEntries.length.toString().padStart(2, '0')} NOTES</span></div>
+        <div className="identity-section-heading"><div><p className="identity-eyebrow">{t(copy.timelineEyebrow)(identityProfile.year)}</p><h2 id="identity-timeline-heading">{t(copy.timelineHeading)}</h2></div><span>{t(copy.timelineCount)(yearEntries.length)}</span></div>
         <div className="identity-archive-controls">
-          <label className="identity-archive-search">查找档案<input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} maxLength={80} placeholder="标题、地点或记录内容" /></label>
-          <label className="identity-archive-source">来源<select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as 'all' | 'user' | 'demo')}><option value="all">全部档案</option><option value="user">我的记录</option><option value="demo">示例档案</option></select></label>
+          <label className="identity-archive-search">{t(copy.searchLabel)}<input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} maxLength={80} placeholder={t(copy.searchPlaceholder)} /></label>
+          <label className="identity-archive-source">{t(copy.sourceLabel)}<select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value as 'all' | 'user' | 'demo')}><option value="all">{t(copy.sourceAll)}</option><option value="user">{t(copy.sourceUser)}</option><option value="demo">{t(copy.sourceDemo)}</option></select></label>
         </div>
-        <p className="identity-archive-result-count">显示 {filteredTimeline.length} / {yearEntries.length} 条 · {identityProfile.year}</p>
+        <p className="identity-archive-result-count">{t(copy.resultCount)(filteredTimeline.length, yearEntries.length, identityProfile.year)}</p>
         {filteredTimeline.length ? (
           <div className="identity-timeline">
             {filteredTimeline.map((entry) => (
@@ -372,20 +387,20 @@ function IdentityView({
                 <div className="identity-timeline-date"><span>{entry.date.slice(5, 7)}</span><b>{entry.date.slice(8, 10)}</b><small>{entry.date.slice(0, 4)}</small></div>
                 <div className="identity-timeline-marker" />
                 <div className="identity-timeline-content">
-                  <div className="identity-timeline-topline"><span>{entry.category}</span>{entry.source === 'demo' ? <b>示例档案</b> : <div className="identity-user-entry-actions">{entry.relatedExperienceId && <b>来自 EXPLORE</b>}<button type="button" onClick={() => editEntry(entry)} aria-label={`编辑记录：${entry.title}`}><BookOpen size={14} />编辑</button><button type="button" onClick={() => removeEntry(entry.id)} aria-label={`删除记录：${entry.title}`}><Trash2 size={14} />删除</button></div>}</div>
+                  <div className="identity-timeline-topline"><span>{entry.category}</span>{entry.source === 'demo' ? <b>{t(copy.entryDemoBadge)}</b> : <div className="identity-user-entry-actions">{entry.relatedExperienceId && <b>{t(copy.entryFromExplore)}</b>}<button type="button" onClick={() => editEntry(entry)} aria-label={t(copy.editAria)(entry.title)}><BookOpen size={14} />{t(copy.entryEdit)}</button><button type="button" onClick={() => removeEntry(entry.id)} aria-label={t(copy.deleteAria)(entry.title)}><Trash2 size={14} />{t(copy.entryDelete)}</button></div>}</div>
                   <h3>{entry.title}</h3>
                   <p className="identity-entry-location"><MapPin size={13} />{entry.location}</p>
                   <p className="identity-entry-note">{entry.note}</p>
-                  <div className="identity-entry-reflection"><span>REFLECT / 预设提示</span><p>{entry.reflection}</p></div>
+                  <div className="identity-entry-reflection"><span>{t(copy.reflectLabel)}</span><p>{entry.reflection}</p></div>
                 </div>
               </article>
             ))}
           </div>
         ) : (
-          <div className="identity-timeline-empty"><BookOpen size={21} /><p>{yearEntries.length ? '没有符合条件的档案。' : '今年的档案还空着。'}</p><button type="button" onClick={() => { setSearchQuery(''); setSourceFilter('all') }}>重置搜索</button></div>
+          <div className="identity-timeline-empty"><BookOpen size={21} /><p>{yearEntries.length ? t(copy.emptyNoMatch) : t(copy.emptyYear)}</p><button type="button" onClick={() => { setSearchQuery(''); setSourceFilter('all') }}>{t(copy.resetSearch)}</button></div>
         )}
       </section>
-      <div className="identity-footer-mark"><span>AS WE WANDER, WE BECOME.</span><span>ARCHIVE / {identityProfile.year}</span></div>
+      <div className="identity-footer-mark"><span>AS WE WANDER, WE BECOME.</span><span>{t(copy.footerMark)(identityProfile.year)}</span></div>
 
       {ticketsOpen && (
         <TicketVault

@@ -3,8 +3,8 @@ import { ArrowLeft, Check, Download, MoreHorizontal, Ticket, X } from 'lucide-re
 import { themeEntryDate, themeVenue } from '../data/theme'
 import { activityOrder, ticketActivity, ticketNumber, type TicketRecord } from '../tickets'
 import { downloadTicketImage } from '../ticket-image'
-import { pick } from '../i18n/localize'
 import { useLocale } from '../i18n/use-locale'
+import { ticketImageCopy as imageCopy, ticketVaultCopy as copy } from '../i18n/tickets'
 import './ticket-vault.css'
 import './ticket-qr.css'
 
@@ -16,7 +16,7 @@ type TicketVaultProps = {
 
 // 打开时才挂载：进入即显示票据列表，点某一张进入票面详情。
 export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultProps) {
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const [openId, setOpenId] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmingCancel, setConfirmingCancel] = useState(false)
@@ -87,9 +87,7 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
   async function saveImage() {
     if (!opened) return
     const created = await downloadTicketImage(opened, locale)
-    setNotice(created
-      ? '已生成票据图片（演示票，不可入场）；若浏览器没有自动下载，请检查下载设置。'
-      : '演示：当前环境无法生成票据图片。')
+    setNotice(created ? t(copy.imageCreated) : t(copy.imageFailed))
   }
 
   return (
@@ -102,20 +100,20 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
       <div className="vault-sheet" role="dialog" aria-modal="true" aria-label="我的票据" ref={sheetRef} tabIndex={-1}>
         <div className="vault-head">
           <p className="vault-eyebrow"><Ticket size={13} aria-hidden="true" />UNSEEN® / CITY PASSPORT</p>
-          <button className="vault-close" type="button" onClick={close} aria-label="关闭我的票据"><X size={18} aria-hidden="true" /></button>
+          <button className="vault-close" type="button" onClick={close} aria-label={t(copy.closeAria)}><X size={18} aria-hidden="true" /></button>
         </div>
 
         {opened && openedActivity ? (
           <div className="vault-detail">
             <div className="vault-detail-bar">
               <button className="vault-back" type="button" onClick={() => backToList()}>
-                <ArrowLeft size={14} aria-hidden="true" />返回票据列表
+                <ArrowLeft size={14} aria-hidden="true" />{t(copy.back)}
               </button>
               <div className="vault-more" ref={menuRef}>
                 <button
                   className="vault-more-button"
                   type="button"
-                  aria-label="更多票据操作"
+                  aria-label={t(copy.moreAria)}
                   aria-haspopup="menu"
                   aria-expanded={menuOpen}
                   onClick={toggleMenu}
@@ -124,8 +122,8 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
                 </button>
                 {menuOpen && (
                   <div className="vault-menu" role="menu">
-                    <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); menuOpenRef.current = false; setConfirmingCancel(true); setNotice('') }}>取消票据</button>
-                    <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); menuOpenRef.current = false; setNotice('演示：正式版会打开客服入口（客服邮箱或站内消息），现在还没有接入。') }}>联系客服</button>
+                    <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); menuOpenRef.current = false; setConfirmingCancel(true); setNotice('') }}>{t(copy.cancelTicket)}</button>
+                    <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); menuOpenRef.current = false; setNotice(t(copy.supportNotice)) }}>{t(copy.contactSupport)}</button>
                   </div>
                 )}
               </div>
@@ -135,35 +133,35 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
                 <span>REVERIE WONDERLAND</span>
                 <span>ISSUE 002</span>
               </div>
-              <p className="vault-ticket-mark" aria-hidden="true">夢</p>
+              <p className="vault-ticket-mark" aria-hidden="true">{t(imageCopy.seal)}</p>
               <dl className="vault-ticket-body">
-                <div><dt>票号｜TICKET NO.</dt><dd>第 {ticketNumber(opened.index)} 张票<span>{opened.id}</span></dd></div>
-                <div><dt>活动｜EVENT</dt><dd>活动 {activityOrder(opened.activityId)} · {pick(locale, openedActivity.name)}<span>{pick(locale, openedActivity.kind)}</span></dd></div>
-                <div><dt>活动时间｜TIME</dt><dd>{openedActivity.day} {openedActivity.time}</dd></div>
-                <div><dt>活动地点｜VENUE</dt><dd>SHANGHAI · {pick(locale, themeVenue)}</dd></div>
-                <div><dt>票期｜ENTRY DATE</dt><dd>{themeEntryDate}</dd></div>
+                <div><dt>{t(imageCopy.labelNo)}</dt><dd>{t(copy.ticketNo)(ticketNumber(opened.index))}<span>{opened.id}</span></dd></div>
+                <div><dt>{t(imageCopy.labelEvent)}</dt><dd>{t(copy.sessionNo)(activityOrder(opened.activityId), t(openedActivity.name))}<span>{t(openedActivity.kind)}</span></dd></div>
+                <div><dt>{t(imageCopy.labelTime)}</dt><dd>{openedActivity.day} {openedActivity.time}</dd></div>
+                <div><dt>{t(imageCopy.labelVenue)}</dt><dd>{t(copy.venueLine)(t(themeVenue))}</dd></div>
+                <div><dt>{t(imageCopy.labelDate)}</dt><dd>{themeEntryDate}</dd></div>
               </dl>
               <div className="ticket-qr">
-                <div className="ticket-qr-box" role="img" aria-label="临时二维码占位"><span>QR</span></div>
-                <p>临时二维码占位：正式版会在这里显示可用于入场的动态码；演示阶段无法扫描。</p>
+                <div className="ticket-qr-box" role="img" aria-label={t(copy.qrAria)}><span>{t(imageCopy.qrPlaceholder)}</span></div>
+                <p>{t(copy.qrNote)}</p>
               </div>
-              <p className="vault-ticket-note">演示票：不产生任何订单或扣款，也不能用于入场；票面信息与二维码均为占位。</p>
+              <p className="vault-ticket-note">{t(copy.ticketDemoNote)}</p>
             </div>
 
-            <p className="vault-status is-saved"><Check size={14} aria-hidden="true" />票据付款后已自动保存入库（演示：正式版登录同一账号后可在其他设备同步）。</p>
+            <p className="vault-status is-saved"><Check size={14} aria-hidden="true" />{t(copy.savedStatus)}</p>
 
             <div className="vault-actions">
               <button className="vault-primary" type="button" onClick={() => { void saveImage() }}>
-                <Download size={15} aria-hidden="true" />下载票据图片
+                <Download size={15} aria-hidden="true" />{t(copy.download)}
               </button>
             </div>
 
             {confirmingCancel ? (
               <div className="vault-cancel">
-                <p>取消后这张票会从票夹里移除，且无法恢复（演示，不涉及任何退款）。</p>
+                <p>{t(copy.cancelNote)}</p>
                 <div className="vault-cancel-actions">
-                  <button className="vault-secondary" type="button" onClick={() => { onCancelTicket(opened.id); backToList(`已取消第 ${ticketNumber(opened.index)} 张票`) }}>确认取消</button>
-                  <button className="vault-secondary" type="button" onClick={() => setConfirmingCancel(false)}>先不取消</button>
+                  <button className="vault-secondary" type="button" onClick={() => { onCancelTicket(opened.id); backToList(t(copy.cancelledNotice)(ticketNumber(opened.index))) }}>{t(copy.confirmCancel)}</button>
+                  <button className="vault-secondary" type="button" onClick={() => setConfirmingCancel(false)}>{t(copy.keepTicket)}</button>
                 </div>
               </div>
             ) : null}
@@ -172,11 +170,11 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
           </div>
         ) : (
           <div className="vault-list-view">
-            <h2 className="vault-title">我的票据<span>{tickets.length.toString().padStart(2, '0')} 张</span></h2>
+            <h2 className="vault-title">{t(copy.title)}<span>{t(copy.count)(tickets.length)}</span></h2>
             {notice ? <p className="vault-notice" role="status">{notice}</p> : null}
             {tickets.length ? (
               <>
-                <p className="vault-note">每张票对应一场活动，按当天活动表顺序发放；票据付款后即保存在本机，点开某一张可以看票号、活动、时间、地点与二维码占位。</p>
+                <p className="vault-note">{t(copy.listNote1)}</p>
                 <ul className="vault-list">
                   {tickets.map((ticket) => {
                     const activity = ticketActivity(ticket)
@@ -185,21 +183,21 @@ export function TicketVault({ tickets, onClose, onCancelTicket }: TicketVaultPro
                       <li key={ticket.id}>
                         <button className="vault-item" type="button" onClick={() => setOpenId(ticket.id)}>
                           <span className="vault-item-top">
-                            <b>第 {ticketNumber(ticket.index)} 张票</b>
+                            <b>{t(copy.ticketNo)(ticketNumber(ticket.index))}</b>
                           </span>
-                          <span className="vault-item-activity">活动 {activityOrder(ticket.activityId)} · {pick(locale, activity.name)}</span>
-                          <span className="vault-item-meta">{activity.day} {activity.time} · {pick(locale, activity.kind)} · SHANGHAI</span>
+                          <span className="vault-item-activity">{t(copy.sessionNo)(activityOrder(ticket.activityId), t(activity.name))}</span>
+                          <span className="vault-item-meta">{activity.day} {activity.time} · {t(activity.kind)} · SHANGHAI</span>
                         </button>
                       </li>
                     )
                   })}
                 </ul>
-                <p className="vault-note">票据只保存在本机浏览器，不包含手机号等个人信息；二维码为占位，票不可入场。</p>
+                <p className="vault-note">{t(copy.listNote2)}</p>
               </>
             ) : (
               <div className="vault-empty">
-                <p>还没有票据。</p>
-                <p>在 DISCOVER 的开屏点 <b>BOOK TICKETS</b>，走完三步（登录 → 付款 → 得到票）后，票据会出现在这里。</p>
+                <p>{t(copy.emptyTitle)}</p>
+                <p>{t(copy.emptyBodyPrefix)}<b>{t(copy.bookButton)}</b>{t(copy.emptyBodySuffix)}</p>
               </div>
             )}
           </div>

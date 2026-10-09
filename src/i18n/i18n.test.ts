@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as contentData from '../data/content'
 import * as discoverData from '../data/discover'
 import * as eventsData from '../data/events'
+import * as identityData from '../data/identity'
 import * as marketData from '../data/market'
 import * as socialData from '../data/social'
 import * as spacesData from '../data/spaces'
@@ -9,6 +10,7 @@ import * as themeData from '../data/theme'
 import * as contentCopy from './content'
 import * as discoverCopy from './discover'
 import * as eventsCopy from './events'
+import * as identityCopy from './identity'
 import * as exploreCopy from './explore'
 import * as homeCopy from './home'
 import * as marketCopy from './market'
@@ -65,11 +67,13 @@ const bilingualModules: [string, Record<string, unknown>][] = [
   ['contentData', contentData],
   ['discoverData', discoverData],
   ['eventsData', eventsData],
+  ['identityData', identityData],
   ['marketData', marketData],
   ['spacesData', spacesData],
   ['contentCopy', contentCopy],
   ['discoverCopy', discoverCopy],
   ['eventsCopy', eventsCopy],
+  ['identityCopy', identityCopy],
   ['exploreCopy', exploreCopy],
   ['homeCopy', homeCopy],
   ['marketCopy', marketCopy],
@@ -83,7 +87,7 @@ describe('双语数据完整性', () => {
   for (const [, module] of bilingualModules) collectPairs(module, '', pairs)
 
   it('覆盖到足够多的双语条目', () => {
-    expect(pairs.length).toBeGreaterThan(250)
+    expect(pairs.length).toBeGreaterThan(300)
   })
 
   it('每一侧要么有内容，要么明确写成 null，不能是空字符串，也不能两侧都空', () => {
