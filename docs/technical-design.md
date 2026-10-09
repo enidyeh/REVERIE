@@ -12,7 +12,7 @@
 src/
   App.tsx                应用壳、导航和页面编排
   MonthlyThemeView.tsx   当月主题杂志页（DISCOVER）
-  DiscoverView.tsx       HOME / EXPLORE 栏目
+  ExploreView.tsx        HOME / EXPLORE 栏目
   EventsView.tsx         HOME / EVENTS
   MarketView.tsx         HOME / SHOP（组件名沿用历史命名）
   SpaceView.tsx          HOME / SPACE
@@ -22,7 +22,8 @@ src/
   components/            可复用的界面组件
   data/                  类型化的演示数据与主题内容
   unseen.css             应用壳与全局布局（基础层见 index.css）
-  theme.css / discover.css / ...  各页面样式
+  surfaces.css           全站圆角 / 投影 / 触控目标规范（在 main.tsx 最后引入）
+  theme.css / explore.css / ...  各页面样式
   main.tsx               应用入口
 ```
 
@@ -34,8 +35,9 @@ src/
 - `src/data/theme.ts` 的 `themeFeatured.items` 同时供 HOME › CONTENT 与 DISCOVER 的「特别推荐」使用；其中 `articles` 直接引用 `src/data/content.ts` 的 `contentTopics`（示范例子），因此两个页面的形式名称与顺序始终一致。依赖方向是 `theme.ts` → `content.ts` 单向（`content.ts` 不引用 `theme.ts`），新增引用时不要反向，以免循环。
 - 购票流程是弹层组件 `src/components/BookingFlow.tsx`（样式 `src/components/booking-flow.css`），只在点开屏 `BOOK TICKETS` 时挂载：挂载时把焦点移入浮层并锁定页面滚动，关闭（按钮 / Esc / 背板）后把焦点交还触发按钮；组件内部只持有“当前步骤”与手机号，卸载即丢弃。
 - 顶部两行 `.app-header` 与 `.main-nav` 在滚动时保持粘顶（`position: sticky`，`top: 0` / `top: var(--app-header-h)`），高度与 `--app-top-h` 写在 `unseen.css` 的 `:root`（≤760px 主导航行隐藏，`--app-nav-h` 为 `0px`）；DISCOVER 的 `.theme-tabs` 与 HOME 的 `.home-tabs` 都粘在 `top: var(--app-top-h)`，各自向外补出外壳内边距并带不透明背景。DISCOVER 的滚动落点与高亮判定（`MonthlyThemeView.tsx` 的 `topBarHeight()`）按实际测量高度计算，不写死数字。
-- EXPLORE 页的四处栏目引导与计划卡片在 `src/DiscoverView.tsx`（样式 `src/explore-guide.css`），映射规则集中在纯函数模块 `src/data/explore-guides.ts`：只对 `src/data/content.ts`（前 8 条专题）、`src/data/market.ts`（本期选品）、`src/data/spaces.ts` 与 `src/data/discover.ts`（体验与实验）做挑选与排序，不新增文案、不发请求。偏好选项文案也放在这里（`preferenceOptions`），筛选控件 `PreferenceControls` 与提示行 `activePreferenceLabels` 共用；`matchingExperiences` 从组件里移到该模块，推荐列表与计划卡片共用同一套规则；`planFor()` 按当前筛选从体验 / 空间里挑一条拼出计划（标题 / 说明 / 信息行均取自条目字段）。入口由 `App.tsx` 传入 `onOpenContent` / `onOpenShop` / `onOpenSpace` / `onOpenEvents` 切到对应的 HOME 栏目。
-- `HOME` 内部切换五个同级栏目 `EXPLORE / CONTENT / EVENTS / SHOP / SPACE`。`EXPLORE` 由 `src/DiscoverView.tsx` 渲染（组件名沿用历史命名，对应界面上的 EXPLORE 栏目），其余四栏为 `ContentView / EventsView / MarketView / SpaceView`（`MarketView` 同样保留历史文件名，界面上已是 `SHOP`）。
+- EXPLORE 页的四处栏目引导与计划卡片在 `src/ExploreView.tsx`（样式 `src/explore.css` 与 `src/explore-guide.css`），映射规则集中在纯函数模块 `src/data/explore-guides.ts`：只对 `src/data/content.ts`（前 8 条专题）、`src/data/market.ts`（本期选品）、`src/data/spaces.ts` 与 `src/data/discover.ts`（体验）做挑选与排序，不新增文案、不发请求。偏好选项文案也放在这里（`preferenceOptions`），筛选控件 `PreferenceControls` 与提示行 `activePreferenceLabels` 共用；`matchingExperiences` 从组件里移到该模块，推荐列表与计划卡片共用同一套规则；`planFor()` 按当前筛选从体验 / 空间里挑一条拼出计划（标题 / 说明 / 信息行均取自条目字段）。入口由 `App.tsx` 传入 `onOpenContent` / `onOpenShop` / `onOpenSpace` / `onOpenEvents` 切到对应的 HOME 栏目。
+  - 命名：2026-10-09 已把组件与样式前缀从 `discover-` 改为 `explore-`（`DiscoverView.tsx` → `ExploreView.tsx`、`discover.css` → `explore.css`）；数据模块仍叫 `src/data/discover.ts`，`localStorage` 键仍为 `unseen:discover:v1` 与 `unseen:discover-preferences:v1`（改名会丢失已有本地状态，因此保留）。
+- `HOME` 内部切换五个同级栏目 `EXPLORE / CONTENT / EVENTS / SHOP / SPACE`。`EXPLORE` 由 `src/ExploreView.tsx` 渲染，其余四栏为 `ContentView / EventsView / MarketView / SpaceView`（`MarketView` 保留历史文件名，界面上已是 `SHOP`）。
 - 初始原型可使用 React 状态完成页面切换；当浏览器前进/后退或可链接页面成为真实需求时，再评估路由库。
 - 演示数据与交互状态分离。数据集中在 `src/data/`，组件不散落复制业务内容。
 - 需要跨刷新保留的状态通过有版本前缀的 localStorage 键保存，并对读取值做解析、类型和异常处理；存储不可用时允许本次会话继续使用内存状态。
@@ -58,6 +60,9 @@ src/
 ## 质量要求
 
 - 类型检查和生产构建必须通过后才能结束阶段。
+- 全量检查脚本为 `npm run check`（= `lint` + `test` + `build`）；单测为 `npm test`（Vitest，目前覆盖筛选规则、计划挑选、商店分类与票据编号共 15 条断言），CI 配置在 `.github/workflows/ci.yml`。
+- 仓库已初始化为 git（2026-10-09），提交前先跑 `npm run check`；删除内容前先确认 git 历史里可回溯。
+- 构建已分包：`react-vendor`（React 运行时）、`icons`（lucide-react）与业务代码分开，便于缓存。
 - 交互组件要有明确空状态、成功反馈和可重复演示的状态恢复方式。
 - 状态更新应保持一致；同一动作不能造成重复加入或重复确认。
 - 样式与业务逻辑分离，颜色和尺寸优先使用统一 CSS 自定义属性。颜色令牌集中在 `src/index.css` 的 `:root`（`--ink` / `--paper` / `--muted` / `--rule` / `--pink` / `--violet` / `--on-acid` / `--panel` / `--shade`）；视觉参考为项目方提供的《第一版 NEURO GROWTH.pdf》（深蓝底 + 酸黄 + 紫）。令牌名沿用历史命名，`--paper` 现为酸黄主文字色、`--pink` 现为紫色强调色。

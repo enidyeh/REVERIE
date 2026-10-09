@@ -78,4 +78,5 @@ textarea,
 .about-channel-link,
 .identity-card-link,
 .explore-text-action,
-.market-secondary-action { min-height: 44px; display: inline-flex; align-items: center; }
+.market-secondary-action,
+.about-footer-mark a { min-height: 44px; display: inline-flex; align-items: center; }
