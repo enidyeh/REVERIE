@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Check, ChevronLeft, ChevronRight, RefreshCw, Sparkles, Ticket } from 'lucide-react'
-import { themePacks, type ThemePack } from './data/theme'
+import { legacyThemePackId, themePacks, type ThemePack } from './data/theme'
 import { BookingFlow } from './components/BookingFlow'
 import { themeAnnouncements, themeCopy as copy } from './i18n/discover'
 import { useLocale } from './i18n/use-locale'
@@ -12,6 +12,7 @@ const storageKey = 'unseen:theme:v1'
 type TabId = 'events' | 'quiz' | 'map'
 type MapGroupId = 'brands' | 'creators'
 
+// 没有互动策划的活动（游园惊梦）只有「活动详情」与「梦境目录」两个板块。
 const themeTabs: { id: TabId; index: string }[] = [
   { id: 'events', index: '01' },
   { id: 'map', index: '02' },
@@ -57,7 +58,7 @@ function parseThemeState(saved: unknown, pack: ThemePack): ThemeState {
 
   const quizPicks: QuizPicks = {}
   if (isRecord(saved.quizPicks)) {
-    for (const question of pack.quiz) {
+    for (const question of pack.quiz ?? []) {
       const picked = saved.quizPicks[question.id]
       if (!Array.isArray(picked)) continue
       const optionIds = new Set(question.options.map((option) => option.id))
@@ -70,7 +71,7 @@ function parseThemeState(saved: unknown, pack: ThemePack): ThemeState {
     quizLocked: saved.quizLocked === true,
     challengeAccepted: saved.challengeAccepted === true,
     challengeDone: saved.challengeDone === true,
-    exampleIndex: typeof saved.exampleIndex === 'number' && Number.isInteger(saved.exampleIndex) && saved.exampleIndex >= 0 && saved.exampleIndex < pack.challenge.examples.zh.length ? saved.exampleIndex : 0,
+    exampleIndex: typeof saved.exampleIndex === 'number' && Number.isInteger(saved.exampleIndex) && saved.exampleIndex >= 0 && saved.exampleIndex < (pack.challenge?.examples.zh.length ?? 0) ? saved.exampleIndex : 0,
     bookedActivities: Array.isArray(saved.bookedActivities) ? saved.bookedActivities.filter((id): id is string => typeof id === 'string' && pack.schedule.some((activity) => activity.id === id)) : [],
     dreamerName: typeof saved.dreamerName === 'string' && saved.dreamerName.trim() ? saved.dreamerName.slice(0, 18) : emptyState.dreamerName,
   }
@@ -81,9 +82,10 @@ function loadThemeStore(): ThemeStore {
     const saved: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null')
     if (!isRecord(saved)) return { issueId: themePacks[0].id, states: {} }
 
-    // 旧版存储里直接是一份互动记录，没有活动维度：归到第一个活动名下。
+    // 旧版存储里直接是一份互动记录（那时只有梦游仙境活动），归到它名下。
     if (!isRecord(saved.states)) {
-      return { issueId: themePacks[0].id, states: { [themePacks[0].id]: parseThemeState(saved, themePacks[0]) } }
+      const legacy = themePackById(legacyThemePackId)
+      return { issueId: legacy.id, states: { [legacy.id]: parseThemeState(saved, legacy) } }
     }
 
     const issueId = typeof saved.issueId === 'string' ? themePackById(saved.issueId).id : themePacks[0].id
@@ -100,7 +102,7 @@ function loadThemeStore(): ThemeStore {
 function resolveResult(picks: QuizPicks, pack: ThemePack) {
   let fantasy = 0
   let flip = 0
-  for (const question of pack.quiz) {
+  for (const question of pack.quiz ?? []) {
     const selected = new Set(picks[question.id] ?? [])
     for (const option of question.options) {
       if (!selected.has(option.id)) continue
@@ -226,9 +228,15 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
     }
   }, [featuredPaused, theme.featured.items.length])
 
-  const answered = theme.quiz.filter((question) => (state.quizPicks[question.id] ?? []).length > 0).length
+  // 互动测试与 24H 任务：活动没有策划这两块时（游园惊梦）不渲染，也不出现在板块导航里。
+  const quiz = theme.quiz
+  const results = theme.results
+  const challenge = theme.challenge
+  const hasInteract = Boolean(quiz && results && challenge)
+  const tabs = hasInteract ? themeTabs : themeTabs.filter((tab) => tab.id !== 'quiz')
+  const answered = (quiz ?? []).filter((question) => (state.quizPicks[question.id] ?? []).length > 0).length
   const resolved = resolveResult(state.quizPicks, pack)
-  const outcome = resolved.outcome === 'fantasy' ? theme.results.fantasy : theme.results.flip
+  const outcome = results ? (resolved.outcome === 'fantasy' ? results.fantasy : results.flip) : null
   const dayActivities = theme.schedule.filter((activity) => activity.day === scheduleDay)
 
   // 左右按钮切换活动：回到页首并重置只在页面内生效的状态，另一场活动的互动记录保留。
@@ -300,11 +308,9 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
         </div>
       </section>
 
-      {pack.placeholder && <p className="theme-issue-placeholder">{t(copy.issueSwitch.placeholder)}</p>}
-
       <nav className="theme-tabs" ref={tabsRef} aria-label={t(copy.tabsNav)}>
         <div className="theme-tabs-inner">
-          {themeTabs.map((tab) => (
+          {tabs.map((tab) => (
             <a
               className={`theme-tab ${activeTab === tab.id ? 'is-active' : ''}`}
               href={`#theme-block-${tab.id}`}
@@ -330,11 +336,11 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
             <span>{theme.duality.sweet.label}</span>
             <dl className="theme-duality-keys">
               <div>
-                <dt>{t(copy.dressCode)}</dt>
-                <dd>{theme.duality.sweet.dressCode}</dd>
+                <dt>{theme.dualityLabels.code}</dt>
+                <dd>{theme.duality.sweet.code}</dd>
               </div>
               <div>
-                <dt>{t(copy.scene)}</dt>
+                <dt>{theme.dualityLabels.scene}</dt>
                 <dd>{theme.duality.sweet.scene}</dd>
               </div>
             </dl>
@@ -346,11 +352,11 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
             <span>{theme.duality.dark.label}</span>
             <dl className="theme-duality-keys">
               <div>
-                <dt>{t(copy.dressCode)}</dt>
-                <dd>{theme.duality.dark.dressCode}</dd>
+                <dt>{theme.dualityLabels.code}</dt>
+                <dd>{theme.duality.dark.code}</dd>
               </div>
               <div>
-                <dt>{t(copy.scene)}</dt>
+                <dt>{theme.dualityLabels.scene}</dt>
                 <dd>{theme.duality.dark.scene}</dd>
               </div>
             </dl>
@@ -540,7 +546,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
                   <p className="theme-wonder-meta">{brand.booth}</p>
                   {brand.link
                     ? <a href={brand.link.href} target="_blank" rel="noreferrer noopener">{brand.link.label} <ArrowUpRight size={12} aria-hidden="true" /></a>
-                    : <p className="theme-wonder-meta">{brand.handle ? t(copy.dreamMap.socialPending) : t(copy.dreamMap.brandPending)}</p>}
+                    : <p className="theme-wonder-meta">{brand.note ?? (brand.handle ? t(copy.dreamMap.socialPending) : t(copy.dreamMap.brandPending))}</p>}
                 </div>
               </article>
             ))}
@@ -571,16 +577,22 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
         </div>
       </section>
 
+      {!hasInteract && (
+        <p className="theme-interact-pending">{t(copy.interact.pending)}</p>
+      )}
+
+      {hasInteract && quiz && results && challenge && outcome && (
+        <>
       <section className="theme-quiz" id="theme-block-quiz" ref={quizRef} aria-labelledby="theme-quiz-heading">
         <div className="theme-section-heading">
           <div>
             {t(copy.quiz.eyebrow) && <p className="theme-eyebrow">{t(copy.quiz.eyebrow)}</p>}
             <h2 id="theme-quiz-heading">{t(copy.quiz.heading)}</h2>
           </div>
-          <span>{t(copy.quiz.answered)(answered, theme.quiz.length)}</span>
+          <span>{t(copy.quiz.answered)(answered, quiz.length)}</span>
         </div>
         <div className="theme-quiz-list">
-          {theme.quiz.map((question) => (
+          {quiz.map((question) => (
             <fieldset className="theme-question" key={question.id}>
               <legend><span>{question.index}</span>{question.prompt}</legend>
               <div className="theme-options">
@@ -606,7 +618,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           <button
             className="theme-primary-action"
             type="button"
-            disabled={answered < theme.quiz.length}
+            disabled={answered < quiz.length}
             onClick={() => {
               pendingScrollRef.current = challengeRef.current
               setState((current) => ({ ...current, quizLocked: true }))
@@ -627,7 +639,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
         <img className="theme-challenge-image" src={theme.meta.rabbitImage} alt={theme.meta.rabbitImageAlt} />
         <div className="theme-challenge-body">
           {t(copy.challenge.eyebrow) && <p className="theme-eyebrow">{t(copy.challenge.eyebrow)}</p>}
-          <h2 id="theme-challenge-heading">{theme.challenge.title}</h2>
+          <h2 id="theme-challenge-heading">{challenge.title}</h2>
           <div className="theme-result">
             <div className="theme-result-topline">
               <span className="theme-result-label">{t(copy.challenge.resultLabel)}</span>
@@ -644,14 +656,14 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           </div>
           {state.quizLocked && (
             <>
-              <p className="theme-challenge-brief">{theme.challenge.brief}</p>
+              <p className="theme-challenge-brief">{challenge.brief}</p>
               <div className="theme-challenge-example">
-                <p>{theme.challenge.examples[state.exampleIndex]}</p>
+                <p>{challenge.examples[state.exampleIndex]}</p>
                 <button
                   className="theme-secondary-action"
                   type="button"
                   onClick={() => {
-                    setState((current) => ({ ...current, exampleIndex: (current.exampleIndex + 1) % theme.challenge.examples.length }))
+                    setState((current) => ({ ...current, exampleIndex: (current.exampleIndex + 1) % challenge.examples.length }))
                     setAnnouncement(t(themeAnnouncements.newExample))
                   }}
                 >
@@ -662,9 +674,9 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
           )}
           <div className="theme-challenge-how">
             <span>{t(copy.challenge.howToLabel)}</span>
-            <p>{theme.challenge.howTo.join(' ＋ ')}</p>
-            <p className="theme-challenge-tags">{theme.challenge.hashtags.join(' ')}</p>
-            <p className="theme-challenge-boundary">{theme.challenge.boundary}</p>
+            <p>{challenge.howTo.join(' ＋ ')}</p>
+            <p className="theme-challenge-tags">{challenge.hashtags.join(' ')}</p>
+            <p className="theme-challenge-boundary">{challenge.boundary}</p>
           </div>
           <div className="theme-challenge-actions">
             {!state.challengeAccepted ? (
@@ -673,7 +685,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
               </button>
             ) : (
               <button className="theme-primary-action" type="button" onClick={() => { setPublishOpen((open) => !open); setAnnouncement(t(themeAnnouncements.chooseChannel)) }}>
-                <ArrowUpRight size={15} aria-hidden="true" />{theme.challenge.publishLabel}
+                <ArrowUpRight size={15} aria-hidden="true" />{challenge.publishLabel}
               </button>
             )}
             <span className="theme-challenge-status">
@@ -684,7 +696,7 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
             <div className="theme-publish">
               <p className="theme-publish-label">{t(copy.challenge.publishTo)}</p>
               <div className="theme-publish-targets">
-                {theme.challenge.publishTargets.map((target) => {
+                {challenge.publishTargets.map((target) => {
                   const done = () => {
                     setPublishOpen(false)
                     setState((current) => ({ ...current, challengeDone: true }))
@@ -724,16 +736,18 @@ function MonthlyThemeView({ onOpenShop, onOpenTickets, onOpenContent }: { onOpen
                   )
                 })}
               </div>
-              <p className="theme-publish-note">{theme.challenge.publishNote}</p>
+              <p className="theme-publish-note">{challenge.publishNote}</p>
               <button className="theme-secondary-action" type="button" onClick={() => setPublishOpen(false)}>{t(copy.challenge.notNow)}</button>
             </div>
           )}
           <div className="theme-challenge-reward">
             <span>{t(copy.challenge.rewardLabel)}</span>
-            <p><b>{theme.challenge.reward.name}</b>{theme.challenge.reward.label && <>｜{theme.challenge.reward.label}</>}</p>
+            <p><b>{challenge.reward.name}</b>{challenge.reward.label && <>｜{challenge.reward.label}</>}</p>
           </div>
         </div>
       </section>
+        </>
+      )}
 
       <p className="theme-announcement" aria-live="polite">{announcement}</p>
       <div className="theme-footer-mark">

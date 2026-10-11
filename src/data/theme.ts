@@ -23,9 +23,11 @@ export type ThemeBrand = {
   index: string
   name: Localized
   handle?: Localized
-  /** 展位号是标识，两版一致。 */
-  booth: string
+  /** 展位号在「梦游仙境」里是标识（两版一致），在「游园惊梦」里是招募状态（招募中 / OPEN CALL）。 */
+  booth: Localized
   line: Localized
+  /** 没有外链时要显示的补充说明（游园惊梦用来说明报名方式）。 */
+  note?: Localized
   link?: ThemeLink
 }
 
@@ -73,7 +75,7 @@ export const themeBrands: ThemeBrand[] = [
     index: '01',
     name: { zh: '因斐涅特', en: 'infinite' },
     handle: { zh: '@因斐涅特', en: '@infinite' },
-    booth: 'Booth B07',
+    booth: { zh: 'Booth B07', en: 'Booth B07' },
     line: {
       zh: '玩偶｜把脑海里奇奇怪怪的小东西，缝成可以带走的朋友。',
       en: 'Dolls — odd little things from the back of the mind, stitched into friends you can take home.',
@@ -83,7 +85,7 @@ export const themeBrands: ThemeBrand[] = [
     id: `slot-${index}`,
     index,
     name: { zh: '展位待项目方提供', en: 'Booth to be provided' },
-    booth: ['Booth B08', 'Booth B09', 'Booth C04', 'Booth C05'][position],
+    booth: { zh: ['Booth B08', 'Booth B09', 'Booth C04', 'Booth C05'][position], en: ['Booth B08', 'Booth B09', 'Booth C04', 'Booth C05'][position] },
     line: {
       zh: '展位已预留，品牌信息与社交媒体链接待补充。',
       en: 'Booth reserved. Brand details and social links to be provided.',
@@ -187,7 +189,8 @@ export const themeMeta = {
   title: { zh: '梦游仙境', en: 'IN THE WONDERLAND' } as Localized,
   // H1 的断行：中文版保持错位的两行排版，英文版一行。
   titleLines: { zh: ['梦 游', '仙 境'], en: ['IN THE WONDERLAND'] } as Localized<string[]>,
-  issue: 'ISSUE 002',
+  // 期号按时间线排：游园惊梦（9.25–9.27）是 ISSUE 002，梦游仙境（10.31–11.1）是 ISSUE 003。
+  issue: 'ISSUE 003',
   window: '2026.10.31-11.1',
   city: { zh: '上海', en: 'SHANGHAI' } as Localized,
   tags: ['COSPLAY', 'LOLITA', 'FANTASY', 'DARK FAIRY TALE'],
@@ -207,14 +210,22 @@ export const themeMeta = {
 
 export type ThemeDualitySide = {
   label: Localized
-  dressCode: Localized
+  /** 两侧的第一行：梦游仙境写着装建议，游园惊梦写内容；具体标签由 dualityLabels 提供。 */
+  code: Localized
   scene: Localized
+}
+
+export type ThemeDualityLabels = { code: Localized; scene: Localized }
+
+export const themeDualityLabels: ThemeDualityLabels = {
+  code: { zh: '着装建议', en: 'DRESS CODE' },
+  scene: { zh: '现场布景风格', en: 'SET DESIGN' },
 }
 
 export const themeDuality: { sweet: ThemeDualitySide; dark: ThemeDualitySide } = {
   sweet: {
     label: { zh: '甜梦', en: 'SWEET DREAM' },
-    dressCode: { zh: '奶油色 · 蕾丝 · 缎带 · 珍珠 · 蕾丝伞', en: 'Cream · lace · ribbon · pearl · lace parasol' },
+    code: { zh: '奶油色 · 蕾丝 · 缎带 · 珍珠 · 蕾丝伞', en: 'Cream · lace · ribbon · pearl · lace parasol' },
     scene: {
       zh: '棉花糖色帷幔、蕾丝灯罩、软光与遍地散落的糖果道具。',
       en: 'Cotton-candy drapes, lace lampshades, soft light and candy props scattered everywhere.',
@@ -222,7 +233,7 @@ export const themeDuality: { sweet: ThemeDualitySide; dark: ThemeDualitySide } =
   },
   dark: {
     label: { zh: '暗黑梦境', en: 'DARK FAIRY TALE' },
-    dressCode: { zh: '黑红 · 皮革 · 面纱 · 银饰 · 暗色红唇', en: 'Black and red · leather · veil · silver · dark red lips' },
+    code: { zh: '黑红 · 皮革 · 面纱 · 银饰 · 暗色红唇', en: 'Black and red · leather · veil · silver · dark red lips' },
     scene: {
       zh: '镜厅、红心与烛火、枯枝与旧相框，光线只落在人物边缘。',
       en: 'A mirror hall, hearts and candlelight, bare branches and old frames, with light only on the edges of people.',
@@ -572,36 +583,61 @@ export const themeCreators: ThemeCreator[] = [
 
 // ---------------------------------------------------------------------------
 // 活动（主题）打包：DISCOVER 页用左右按钮在各场活动之间切换，视图只读取当前活动这一份数据。
-// 上面所有导出都是「梦游仙境」的内容，是当前唯一的真实数据源。
-// 「游园惊梦」的项目方资料尚未提供：先整体复制「梦游仙境」的内容占位（只改活动名、期号与 H1 断行），
-// 并标记 placeholder，页面会显示一句占位说明。资料到齐后替换包内数据、去掉 placeholder 即可。
+// 上面所有导出都是「梦游仙境」的内容；「游园惊梦」的内容在 src/data/theme-garden.ts。
+// 新增一场活动 = 再写一份内容对象 + 在 themePacks 里登记，不需要改视图。
 // ---------------------------------------------------------------------------
+import {
+  gardenBrands,
+  gardenCreators,
+  gardenDuality,
+  gardenDualityLabels,
+  gardenEntryDate,
+  gardenMapGroups,
+  gardenMapPlan,
+  gardenMeta,
+  gardenRituals,
+  gardenSchedule,
+  gardenScheduleDays,
+  gardenScheduleNote,
+  gardenTicket,
+  gardenVenue,
+} from './theme-garden'
 
 export type ThemeTicket = typeof themeTicket
 
+export type ThemeMeta = typeof themeMeta
+export type ThemeDuality = typeof themeDuality
+export type ThemeResults = typeof themeResults
+export type ThemeChallenge = typeof themeChallenge
+export type ThemeFeatured = typeof themeFeatured
+export type ThemeMapPlan = typeof themeMapPlan
+export type ThemeShopCta = typeof themeShopCta
+
 export type ThemePack = {
   id: string
-  meta: typeof themeMeta
+  meta: ThemeMeta
   /** 入场时间以项目方原文为准，购票流程与票据都用它。 */
   entryDate: string
   venue: Localized
   ticket: ThemeTicket
-  duality: typeof themeDuality
+  duality: ThemeDuality
+  /** 活动详情里双面那一行的两个标签：梦游仙境是「着装建议 / 现场布景风格」，游园惊梦是「内容 / 现场布景」。 */
+  dualityLabels: ThemeDualityLabels
   rituals: ThemeRitual[]
   scheduleDays: readonly string[]
   schedule: ThemeActivity[]
   scheduleNote: Localized
-  quiz: ThemeQuizQuestion[]
-  results: typeof themeResults
-  challenge: typeof themeChallenge
-  featured: typeof themeFeatured
-  mapPlan: typeof themeMapPlan
+  /** 互动测试与 24H 任务：这一期没有策划的活动留空，并把 interact 设为 false，页面不渲染这两块。 */
+  quiz?: ThemeQuizQuestion[]
+  results?: ThemeResults
+  challenge?: ThemeChallenge
+  interact?: boolean
+  featured: ThemeFeatured
+  mapPlan: ThemeMapPlan
   mapGroups: ThemeMapGroup[]
   brands: ThemeBrand[]
   creators: ThemeCreator[]
-  shopCta: typeof themeShopCta
-  /** 内容仍是复制占位，等待项目方资料；为 true 时页面显示占位说明。 */
-  placeholder?: boolean
+  shopCta: ThemeShopCta
 }
 
 const wonderlandPack: ThemePack = {
@@ -611,6 +647,7 @@ const wonderlandPack: ThemePack = {
   venue: themeVenue,
   ticket: themeTicket,
   duality: themeDuality,
+  dualityLabels: themeDualityLabels,
   rituals: themeRituals,
   scheduleDays: themeScheduleDays,
   schedule: themeSchedule,
@@ -618,6 +655,7 @@ const wonderlandPack: ThemePack = {
   quiz: themeQuiz,
   results: themeResults,
   challenge: themeChallenge,
+  interact: true,
   featured: themeFeatured,
   mapPlan: themeMapPlan,
   mapGroups: themeMapGroups,
@@ -626,29 +664,38 @@ const wonderlandPack: ThemePack = {
   shopCta: themeShopCta,
 }
 
-// 游园惊梦的占位身份信息：英文名待项目方确认，暂用 A DREAM IN THE GARDEN。
-const gardenMeta: typeof themeMeta = {
-  ...themeMeta,
-  series: { zh: '异想集 REVERIE｜游园惊梦', en: 'REVERIE｜A DREAM IN THE GARDEN' },
-  title: { zh: '游园惊梦', en: 'A DREAM IN THE GARDEN' },
-  titleLines: { zh: ['游 园', '惊 梦'], en: ['A DREAM IN THE GARDEN'] },
-  issue: 'ISSUE 003',
+// 游园惊梦：内容全部来自项目方资料（见 src/data/theme-garden.ts）。
+// 这一期没有可用的互动测试与 24H 任务策划，因此 interact 为 false，页面上只保留「活动详情」与「梦境目录」两个板块。
+const gardenPack: ThemePack = {
+  id: 'garden',
+  meta: gardenMeta,
+  entryDate: gardenEntryDate,
+  venue: gardenVenue,
+  ticket: gardenTicket,
+  duality: gardenDuality,
+  dualityLabels: gardenDualityLabels,
+  rituals: gardenRituals,
+  scheduleDays: gardenScheduleDays,
+  schedule: gardenSchedule,
+  scheduleNote: gardenScheduleNote,
+  interact: false,
+  featured: themeFeatured,
+  mapPlan: gardenMapPlan,
+  mapGroups: gardenMapGroups,
+  brands: gardenBrands,
+  creators: gardenCreators,
+  shopCta: themeShopCta,
 }
 
-export const themePacks: ThemePack[] = [
-  wonderlandPack,
-  {
-    ...wonderlandPack,
-    id: 'garden',
-    meta: gardenMeta,
-    // 票种名不能沿用「梦游入场券」（那是另一场活动的名字），占位阶段改用中性的「入场券」。
-    ticket: { ...themeTicket, name: { zh: '入场券', en: 'ENTRY TICKET' } },
-    placeholder: true,
-  },
-]
+// 顺序按时间线：游园惊梦（9.25–9.27）在前，是默认打开的那一场；梦游仙境（10.31–11.1）在后。
+export const themePacks: ThemePack[] = [gardenPack, wonderlandPack]
+
+// 活动切换之前只存了第一场（梦游仙境）的互动记录，旧数据要归到它名下，而不是现在的第一场。
+export const legacyThemePackId = 'wonderland'
 
 /** 所有活动里的活动条目，按 id 去重：票夹与票号按它解析。 */
 export const allThemeActivities: ThemeActivity[] = [...new Map(themePacks.flatMap((pack) => pack.schedule).map((activity) => [activity.id, activity])).values()]
+
 
 /** 按活动条目 id 找回它所属的活动（票面渲染用）。 */
 export function themePackOfActivity(activityId: string): ThemePack | undefined {

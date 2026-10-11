@@ -29,11 +29,14 @@ export type OpenCall = {
 
 export const openCalls: OpenCall[] = [
   {
-    id: 'reverie-wonderland',
-    title: { zh: '梦游梦境', en: 'REVERIE WONDERLAND' },
-    window: '10.31–11.01',
+    id: 'reverie-garden',
+    title: { zh: '游园惊梦', en: 'A DREAM IN THE GARDEN' },
+    window: '9.25–9.27',
     status: { zh: '正在招募', en: 'OPEN NOW' },
-    line: { zh: 'Cos / Lolita / 梦境市集 / 午夜舞会。', en: 'Cos / Lolita / dream market / midnight ball.' },
+    line: {
+      zh: '集市摊位（时尚 / 器物 / 艺术 / 文化 / 餐饮 / 生活方式）、展览与演出同步招募；摊主报名微信 QINETIC（备注摊主）。',
+      en: 'Market stalls (fashion, objects, art, culture, food & drink, lifestyle), exhibitions and performances are open for applications. Vendor WeChat: QINETIC.',
+    },
   },
 ]
 
@@ -51,10 +54,11 @@ export const openCallRoles: OpenCallRole[] = [
 
 // 表单字段为通用演示字段，提交只在本地模拟，不发送任何数据。
 export const openCallFields = [
-  { id: 'name', label: { zh: '称呼', en: 'Name' } as Localized, placeholder: { zh: '怎么称呼你', en: 'What should we call you' } as Localized, required: true },
-  { id: 'contact', label: { zh: '联系方式', en: 'Contact' } as Localized, placeholder: { zh: '邮箱或社交账号（演示用，不会上传）', en: 'Email or social handle (demo only, never uploaded)' } as Localized, required: true },
-  { id: 'link', label: { zh: '作品 / 项目链接', en: 'Work or project link' } as Localized, placeholder: { zh: '主页、作品集或往期现场', en: 'Homepage, portfolio or past events' } as Localized, required: false },
-  { id: 'intro', label: { zh: '你想带来的东西', en: 'What you want to bring' } as Localized, placeholder: { zh: '一小段介绍，说清你想在这个梦里做什么', en: 'A short note on what you want to do in this dream' } as Localized, required: true },
+  { id: 'name', label: { zh: '品牌 / 称呼', en: 'Brand or name' } as Localized, placeholder: { zh: '品牌名或怎么称呼你', en: 'Your brand or what we should call you' } as Localized, required: true },
+  { id: 'intro', label: { zh: '中英文介绍', en: 'Intro in Chinese and English' } as Localized, placeholder: { zh: '一段中文介绍与一段英文介绍', en: 'One short intro in Chinese and one in English' } as Localized, required: true },
+  { id: 'social', label: { zh: '社交媒体', en: 'Social media' } as Localized, placeholder: { zh: '小红书 / 微信 / 微博 / Instagram 账号（演示用，不会上传）', en: 'Xiaohongshu / WeChat / Weibo / Instagram handle (demo only, never uploaded)' } as Localized, required: true },
+  { id: 'products', label: { zh: '产品信息', en: 'Product info' } as Localized, placeholder: { zh: '品类、价位与现场会带来的商品', en: 'Category, price range and what you will bring' } as Localized, required: true },
+  { id: 'markets', label: { zh: '过往集市', en: 'Past markets' } as Localized, placeholder: { zh: '参加过的集市或活动（可选）', en: 'Markets or events you have joined (optional)' } as Localized, required: false },
 ]
 
 export const partnerFormFields = [

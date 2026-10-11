@@ -19,8 +19,15 @@ export const themeCopy = {
   entryDate: { zh: '入梦日期', en: 'ENTRY DATE' } as Localized,
   location: { zh: '入梦坐标', en: 'LOCATION' } as Localized,
   dualityLabel: { zh: '甜梦与暗黑梦境', en: 'Sweet dream and dark fairy tale' } as Localized,
-  dressCode: { zh: '着装建议', en: 'DRESS CODE' } as Localized,
-  scene: { zh: '现场布景风格', en: 'SET DESIGN' } as Localized,
+  // 双面那一行的两个标签由活动数据提供（theme.dualityLabels）：梦游仙境是「着装建议 / 现场布景风格」，游园惊梦是「内容 / 现场布景」。
+
+  // 这一期没有互动测试与 24H 任务策划时，在该位置给出一句说明。
+  interact: {
+    pending: {
+      zh: '这一期的梦境测试与 24H 兔子洞任务正在重新策划，待项目方提供；本期先只展示活动详情与梦境目录。',
+      en: 'The dream quiz and the 24-hour rabbit-hole challenge are being re-planned for this issue. For now this issue shows the event details and the directory only.',
+    } as Localized,
+  },
 
   rituals: {
     eyebrow: englishOnly("WHAT'S INSIDE"),
@@ -113,10 +120,6 @@ export const themeCopy = {
       zh: (title: string) => `已切换到「${title}」`,
       en: (title: string) => `Switched to “${title}”`,
     } as Localized<(title: string) => string>,
-    placeholder: {
-      zh: '演示：「游园惊梦」的活动资料尚未提供，本页内容暂为「梦游仙境」的复制占位，等主题资料确认后替换。',
-      en: 'Demo: the material for A DREAM IN THE GARDEN has not been provided yet, so this page currently shows a copy of IN THE WONDERLAND, to be replaced once the theme material is confirmed.',
-    } as Localized,
   },
 
   footerLine: {
