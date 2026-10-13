@@ -30,10 +30,9 @@ jobs:
       - run: npm run check
         env:
           VITE_BASE: /REVERIE/
-      - uses: actions/configure-pages@v5
-        with:
-          # 仓库还没开启 Pages 时由这一步开启（需要 pages: write 权限）。
-          enablement: true
+      # 说明：仓库第一次发布前需要在 Settings → Pages 把 Source 选为「GitHub Actions」（只需一次）。
+      # 试过用 actions/configure-pages 的 enablement 自动开启，但默认 token 会被拒（Resource not accessible by integration），
+      # 所以这里不再调用它，只负责上传产物与发布。
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
