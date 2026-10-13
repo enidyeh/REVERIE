@@ -75,7 +75,8 @@ src/
 ## 质量要求
 
 - 类型检查和生产构建必须通过后才能结束阶段。
-- 全量检查脚本为 `npm run check`（= `lint` + `test` + `build`）；单测为 `npm test`（Vitest，目前覆盖筛选规则、计划挑选、商店分类与票据编号共 15 条断言），CI 配置在 `.github/workflows/ci.yml`。
+- 全量检查脚本为 `npm run check`（= `lint` + `test` + `build`）；单测为 `npm test`（Vitest，目前 2 个文件共 21 条断言），CI 配置在 `.github/workflows/ci.yml`（push / PR 都跑）。
+- 部署：代码托管在 `https://github.com/enidyeh/REVERIE`（`enidyeh/UNSEEN` 会 301 重定向到同一个仓库），线上预览走 GitHub Pages 的仓库页面 `https://enidyeh.github.io/REVERIE/`。因为站点在子路径下，`vite.config.ts` 的 `base` 读环境变量 `VITE_BASE`（本地默认 `/`，Pages 构建传 `/REVERIE/`），工作流 `.github/workflows/deploy-pages.yml` 在 push 到 `main` 时执行 `npm run check`（带 `VITE_BASE`）并把 `dist` 发布到 Pages，不需要把构建产物提交进仓库。
 - 仓库已初始化为 git（2026-10-09），提交前先跑 `npm run check`；删除内容前先确认 git 历史里可回溯。
 - 构建已分包：`react-vendor`（React 运行时）、`icons`（lucide-react）与业务代码分开，便于缓存。
 - 交互组件要有明确空状态、成功反馈和可重复演示的状态恢复方式。
